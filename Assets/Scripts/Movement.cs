@@ -101,7 +101,7 @@ public class AdvancedMovement : MonoBehaviour
         Vector3 desiredVel = ComputeDesiredVelocity();
 
         // smoothly adjust current XZ velocity towards desired
-        Vector3 vel = rb.velocity;
+        Vector3 vel = rb.linearVelocity;
         Vector3 velXZ = new Vector3(vel.x, 0f, vel.z);
         float accel = isGrounded ? (inputDirection.sqrMagnitude > 0.001f ? groundAcceleration : groundFriction) : airAcceleration;
 
@@ -116,7 +116,7 @@ public class AdvancedMovement : MonoBehaviour
             velXZ = Vector3.Lerp(velXZ, desiredVel, accel * 50f); // accelerate fast on ground
         }
 
-        rb.velocity = new Vector3(velXZ.x, rb.velocity.y, velXZ.z);
+        rb.linearVelocity = new Vector3(velXZ.x, rb.linearVelocity.y, velXZ.z);
 
         // gravity modifications for better jump feel
         ApplyCustomGravity();
@@ -140,11 +140,11 @@ public class AdvancedMovement : MonoBehaviour
         Vector3 gravity = Physics.gravity; // Default gravity (-9.81 on Y)
         float multiplier = 1f;
 
-        if (rb.velocity.y < -0.01f)
+        if (rb.linearVelocity.y < -0.01f)
         {
             multiplier = fallGravityMultiplier;
         }
-        else if (rb.velocity.y > 0.01f && _jumpHeld)
+        else if (rb.linearVelocity.y > 0.01f && _jumpHeld)
         {
             multiplier = holdJumpGravityMultiplier;
         }
@@ -183,20 +183,20 @@ public class AdvancedMovement : MonoBehaviour
         }
 
         // Small optimization: if touching ceiling, cut upward velocity
-        if (rb.velocity.y > 0f && IsHeadBlocked())
+        if (rb.linearVelocity.y > 0f && IsHeadBlocked())
         {
-            rb.velocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+            rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
         }
     }
 
     void DoJump()
     {
-        Vector3 v = rb.velocity;
+        Vector3 v = rb.linearVelocity;
         // Remove any downward velocity before applying jump for consistency
         if (v.y < 0f) v.y = 0f;
 
         v.y = jumpForce;
-        rb.velocity = v;
+        rb.linearVelocity = v;
 
         // Clear jump buffer
         lastJumpPressedTime = -999f;
