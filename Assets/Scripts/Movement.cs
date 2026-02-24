@@ -31,6 +31,7 @@ public class AdvancedMovement : MonoBehaviour
 
     [Header("Misc")]
     public Transform orientation;              // optional transform to use for movement direction (usually camera)
+    public Transform playerObj;                // the player model/object to determine facing direction
     public bool allowSprint = true;
 
     // private
@@ -61,6 +62,9 @@ public class AdvancedMovement : MonoBehaviour
         jumpsRemaining = extraJumps;
         if (orientation == null)
             orientation = Camera.main ? Camera.main.transform : transform;
+        
+        if (playerObj == null)
+            playerObj = transform;
     }
 
     void Update()
@@ -72,9 +76,10 @@ public class AdvancedMovement : MonoBehaviour
         bool jumpHeld = Input.GetButton("Jump");
         bool sprintHeld = allowSprint && Input.GetKey(KeyCode.LeftShift);
 
-        // store directional input relative to orientation (e.g., camera)
-        Vector3 forward = Vector3.ProjectOnPlane(orientation.forward, Vector3.up).normalized;
-        Vector3 right = Vector3.ProjectOnPlane(orientation.right, Vector3.up).normalized;
+        // Get camera direction from main camera
+        Transform cameraTransform = Camera.main ? Camera.main.transform : transform;
+        Vector3 forward = Vector3.ProjectOnPlane(cameraTransform.forward, Vector3.up).normalized;
+        Vector3 right = Vector3.ProjectOnPlane(cameraTransform.right, Vector3.up).normalized;
         inputDirection = (forward * v + right * h);
         if (inputDirection.sqrMagnitude > 1f) inputDirection.Normalize();
 
