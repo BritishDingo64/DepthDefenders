@@ -1,3 +1,4 @@
+#if Unity_Editor
 using System.ComponentModel;
 using UnityEditor;
 using UnityEngine;
@@ -7,3 +8,4 @@ public class SpawnerEditor : EditorAttribute
 {
     SerializedProperty route;
 }
+#endif
