@@ -1,0 +1,9 @@
+using System.ComponentModel;
+using UnityEditor;
+using UnityEngine;
+
+[CustomEditor(typeof(Spawner))]
+public class SpawnerEditor : EditorAttribute
+{
+    SerializedProperty route;
+}
