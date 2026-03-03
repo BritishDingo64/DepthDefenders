@@ -1,29 +1,9 @@
 fileFormatVersion: 2
-guid: 2a4aff409de3d214d941b7d718b9729a
+guid: 861481c3a7c077c4e87efbe18bb5cb8c
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Gravel Ground.001
-    second: {fileID: 2100000, guid: 9dfc2bc265bb70344955dc0a9197bc91, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Ocean water with waves and foam
-    second: {fileID: 2100000, guid: 4a6f8e9eeadfb444c8adf03a7a8c699b, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Stone Wall
-    second: {fileID: 2100000, guid: f87b1e709dc0fe746b91260e2601bbe9, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: sand
-    second: {fileID: 2100000, guid: 156a0274fbd16e54fbdf1e2d35faae3e, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
