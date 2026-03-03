@@ -1,5 +1,10 @@
 fileFormatVersion: 2
+<<<<<<<< Updated upstream:Assets/TextMesh Pro/Examples & Extras/Scenes/28 - HDRP Shader Example.unity.meta
 guid: eea2b7206368b444e84fbec4ec32b64a
+========
+guid: 1803f27bc1e871b4ba7372f05e43de33
+folderAsset: yes
+>>>>>>>> Stashed changes:Assets/Prefabs.meta
 DefaultImporter:
   externalObjects: {}
   userData: 

@@ -1,5 +1,10 @@
 fileFormatVersion: 2
-guid: 0851605490a599b46b6ac5cb681d93ea
+<<<<<<<< Updated upstream:Assets/TextMesh Pro/Examples & Extras/Scenes/26 - Dropdown Placeholder Example.unity.meta
+guid: 9e3fe09380a9b7747bd3b9c2017a16fa
+========
+guid: 1803f27bc1e871b4ba7372f05e43de33
+folderAsset: yes
+>>>>>>>> Stashed changes:Assets/Prefabs.meta
 DefaultImporter:
   externalObjects: {}
   userData: 
