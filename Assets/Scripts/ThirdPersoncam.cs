@@ -13,6 +13,7 @@ public class ThirdPersoncam : MonoBehaviour {
     public CameraStyle currentstyle;
     public GameObject CombatCam;
     public GameObject FreeLookCam;
+    private BuildMenu buildMenu;
     public enum CameraStyle {
         basic,
         Combat
@@ -21,8 +22,13 @@ public class ThirdPersoncam : MonoBehaviour {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         switchcameraStyle(CameraStyle.basic);
+        buildMenu = FindFirstObjectByType<BuildMenu>();
     }
     private void Update() {
+        // Don't lock/control camera if build menu is open
+        if (buildMenu != null && buildMenu.IsMenuOpen())
+            return;
+        
         //rotation orientation
         Vector3 viewDir = player.position - new Vector3(transform.position.x, player.position.y, transform.position.z);
         orientation.forward = viewDir.normalized;

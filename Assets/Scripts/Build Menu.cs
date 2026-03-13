@@ -5,7 +5,6 @@ public class BuildMenu : MonoBehaviour
 {
     [Header("UI References")]
     public Canvas buildMenuCanvas;
-    public TextMeshProUGUI cancelBuildingText;
     
     [Header("Building Prefabs")]
     public GameObject[] buildingPrefabs; // Array of 4 building prefabs
@@ -14,6 +13,7 @@ public class BuildMenu : MonoBehaviour
     public Material validPlacementMaterial; // Green material
     public Material invalidPlacementMaterial; // Red material
     public LayerMask groundLayer; // What counts as valid ground
+    public BuildingPreviewManager previewManager; // Assign this in Inspector
     
     private bool isMenuOpen = false;
     private bool isPlacingBuilding = false;
@@ -23,11 +23,9 @@ public class BuildMenu : MonoBehaviour
     
     void Start()
     {
-        // Initialize UI states
-        if (buildMenuCanvas != null)
-            buildMenuCanvas.gameObject.SetActive(false);
-        if (cancelBuildingText != null)
-            cancelBuildingText.gameObject.SetActive(false);
+        // Setup preview manager
+        if (previewManager != null)
+            previewManager.SetupPreviews(buildingPrefabs);
     }
 
     void Update()
@@ -47,6 +45,16 @@ public class BuildMenu : MonoBehaviour
             }
         }
         
+        // Select building with number keys 1-4
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            SelectBuilding(0);
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+            SelectBuilding(1);
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+            SelectBuilding(2);
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+            SelectBuilding(3);
+        
         // Handle building placement
         if (isPlacingBuilding)
         {
@@ -65,6 +73,14 @@ public class BuildMenu : MonoBehaviour
         isMenuOpen = !isMenuOpen;
         if (buildMenuCanvas != null)
             buildMenuCanvas.gameObject.SetActive(isMenuOpen);
+        
+        // Unlock mouse when menu is open, lock when closed
+        Cursor.lockState = isMenuOpen ? CursorLockMode.None : CursorLockMode.Locked;
+    }
+    
+    public bool IsMenuOpen()
+    {
+        return isMenuOpen;
     }
     
     // Call this from UI buttons (0-3)
@@ -82,11 +98,9 @@ public class BuildMenu : MonoBehaviour
         isPlacingBuilding = true;
         isMenuOpen = false;
         
-        // Hide menu and show cancel text
+        // Hide menu
         if (buildMenuCanvas != null)
             buildMenuCanvas.gameObject.SetActive(false);
-        if (cancelBuildingText != null)
-            cancelBuildingText.gameObject.SetActive(true);
         
         // Create preview object
         if (buildingPrefabs[selectedBuildingIndex] != null)
@@ -181,10 +195,6 @@ public class BuildMenu : MonoBehaviour
             Destroy(currentPreview);
             currentPreview = null;
         }
-        
-        // Hide cancel text
-        if (cancelBuildingText != null)
-            cancelBuildingText.gameObject.SetActive(false);
     }
     
     void SetPreviewTransparency()
