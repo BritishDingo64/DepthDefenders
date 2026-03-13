@@ -17,9 +17,11 @@ public class Crystal : MonoBehaviour {
     void HasPlayerStartedWave() {
         if (!waveStarted) {
             IsPlayerLookingAt();
-            if (Input.GetKeyDown("x"))
+            if (Input.GetKeyDown("x")) {
+                DisplayText();
                 waveStarted = true;
-            waveNumber++;
+                waveNumber++;
+            }
         }
     }
     void IsPlayerLookingAt() {

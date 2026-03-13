@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -15,18 +16,30 @@ public class Spawner : MonoBehaviour {
     [SerializeField]
     List<Wave> waves;
     public GameObject crystal;
-    List<GameObject> instantiatedObjectPool;
+    List<GameObject> instantiatedObjectPool = new();
+    private void Awake() {
+        for (int i = 0; i < waves.Count(); i++)
+            foreach (MonsterAndType a in waves[i].monsters)
+                a.monsterComponent = a.monster.GetComponent<Monster>();
+    }
     void Start() {
-        StartCoroutine(nameof(PoolObjects));
+        StartCoroutine(PoolObjects(0));
     }
     IEnumerator PoolObjects(int wave) {
         float timeAtStart = Time.deltaTime;
         foreach (MonsterAndType monster in waves[wave].monsters) {
-            while (timeAtStart + 0.005f / monster.count < Time.deltaTime) {
-                GameObject instantiated = Instantiate(monster.Monster);
+
+            while (instantiatedObjectPool.Where(x => x.name == monster.monsterComponent.name).Count() < monster.count) {
+                Debug.Log(instantiatedObjectPool.Count() + ", " + instantiatedObjectPool.Where(x => x.name == monster.monsterComponent.name).Count() + ", " + monster.monsterComponent.name);
+                GameObject instantiated = Instantiate(monster.monster);
                 instantiated.SetActive(false);
                 instantiated.transform.position = transform.position + Vector3.up;
+                if (instantiated.GetComponent<Monster>() == null) instantiated.AddComponent<Monster>();
+                instantiated.GetComponent<Monster>().name = monster.monsterComponent.name;
+                instantiated.GetComponent<Monster>().spawner = gameObject;
+                instantiated.GetComponent<Monster>().nextTarget = MonsterPath[0];
                 instantiatedObjectPool.Add(instantiated);
+                yield return null;
             }
         }
         yield return null;
@@ -41,17 +54,18 @@ public class Spawner : MonoBehaviour {
         return crystal.GetComponent<Crystal>().waveStarted;
     }
     IEnumerator StartWave() {
-        for (int i = 0; i < waves[crystal.GetComponent<Crystal>().waveNumber].numberOfSubWaves; i++) {
-            foreach (MonsterAndType monsterType in waves[crystal.GetComponent<Crystal>().waveNumber].monsters) {
-                for (int j = 0; j < monsterType.count / (waves[crystal.GetComponent<Crystal>().waveNumber].numberOfSubWaves - i); j++) {
-                    SpawnMonster(monsterType.Monster.GetComponent<Monster>());
+        for (int i = 0; i < waves[crystal.GetComponent<Crystal>().waveNumber - 1].numberOfSubWaves; i++) {
+            foreach (MonsterAndType monsterType in waves[crystal.GetComponent<Crystal>().waveNumber - 1].monsters) {
+                for (int j = 0; j < monsterType.count / (waves[crystal.GetComponent<Crystal>().waveNumber - 1].numberOfSubWaves - i); j++) {
+                    SpawnMonster(monsterType.monster);
                 }
             }
         }
         yield return null;
     }
-    void SpawnMonster(Monster monster) {
-
+    void SpawnMonster(GameObject monster) {
+        GameObject newMonster = Instantiate(monster);
+        instantiatedObjectPool.Add(newMonster);
         enemyCount += 1;
     }
 
@@ -60,6 +74,10 @@ public class Spawner : MonoBehaviour {
         if (MonsterPath.Count == 0) throw new KeyNotFoundException("MonsterPath needs to have at least one element in it");
         return MonsterPath[^1];
     }
+    public Vector3 NextPointFromPreviousPoint(Vector3 priorPosition) {
+        return MonsterPath.Contains(priorPosition) ? MonsterPath[MonsterPath.IndexOf(priorPosition) + 1] : crystal.transform.position;
+    }
+    #region DrawPath
     private void OnDrawGizmosSelected() {
         if (MonsterPath.Count == 0) return;
         for (int i = 0; i < MonsterPath.Count; i++) {
@@ -81,4 +99,5 @@ public class Spawner : MonoBehaviour {
         Vector3 newLineDirection2 = new Vector3(-0.707f * lineDirection2.x - 0.707f * lineDirection2.z, -0.707f * lineDirection2.y, 0.707f * lineDirection2.x - 0.707f * lineDirection2.z);
         Gizmos.DrawLine(pos2, pos2 + newLineDirection2 * arrowHeadSize);
     }
+    #endregion
 }
