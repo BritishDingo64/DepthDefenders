@@ -210,13 +210,33 @@ public class AdvancedMovement : MonoBehaviour
 
     void GroundCheck()
     {
-        // Cast a sphere from slightly above the bottom of the capsule downward to detect ground and surface normal
-        Vector3 origin = transform.position + Vector3.up * (capsule.height * 0.5f - capsule.radius);
-        float checkRadius = capsule.radius * 0.9f;
-        float checkDistance = capsule.height * 0.5f + groundCheckDistance;
+        // Robust world-space feet check based on collider bounds (works with center offsets/scaling).
+        int mask = GetGroundMask();
+        Bounds b = capsule.bounds;
+        float feetToCenter = Mathf.Max(0f, b.extents.y - capsule.radius);
+        Vector3 feetSphereCenter = b.center + Vector3.down * feetToCenter;
+        float checkRadius = Mathf.Max(0.01f, capsule.radius * 0.9f);
+
+        // First: simple overlap at feet so we reliably know we're touching ground.
+        bool touchingGround = Physics.CheckSphere(
+            feetSphereCenter + Vector3.down * Mathf.Max(0.01f, groundCheckDistance * 0.5f),
+            checkRadius,
+            mask,
+            QueryTriggerInteraction.Ignore);
+
+        if (!touchingGround)
+        {
+            isGrounded = false;
+            contactNormal = Vector3.up;
+            return;
+        }
+
+        // Second: ray for normal/slope evaluation.
+        float rayLength = feetToCenter + Mathf.Max(0.05f, groundCheckDistance) + 0.2f;
+        Vector3 rayOrigin = b.center + Vector3.up * 0.05f;
 
         RaycastHit hit;
-        if (Physics.SphereCast(origin, checkRadius, Vector3.down, out hit, checkDistance, groundLayer, QueryTriggerInteraction.Ignore))
+        if (Physics.Raycast(rayOrigin, Vector3.down, out hit, rayLength, mask, QueryTriggerInteraction.Ignore))
         {
             float angle = Vector3.Angle(hit.normal, Vector3.up);
             if (angle <= slopeLimit)
@@ -234,8 +254,21 @@ public class AdvancedMovement : MonoBehaviour
     bool IsHeadBlocked()
     {
         // quick check for ceiling collisions above the top of the capsule
-        Vector3 top = transform.position + Vector3.up * (capsule.height * 0.5f - capsule.radius);
-        return Physics.CheckSphere(top, capsule.radius * 0.9f, groundLayer, QueryTriggerInteraction.Ignore);
+        int mask = GetGroundMask();
+        Bounds b = capsule.bounds;
+        float headToCenter = Mathf.Max(0f, b.extents.y - capsule.radius);
+        Vector3 top = b.center + Vector3.up * headToCenter;
+
+        return Physics.CheckSphere(top, Mathf.Max(0.01f, capsule.radius * 0.85f), mask, QueryTriggerInteraction.Ignore);
+    }
+
+    int GetGroundMask()
+    {
+        // If unset in Inspector, treat as all layers except this object's layer.
+        if (groundLayer.value == 0)
+            return ~ (1 << gameObject.layer);
+
+        return groundLayer.value;
     }
 
     // Optional: visualize ground check for debugging
@@ -245,7 +278,9 @@ public class AdvancedMovement : MonoBehaviour
         if (capsule == null) return;
 
         Gizmos.color = Color.cyan;
-        Vector3 origin = transform.position + Vector3.up * (capsule.height * 0.5f - capsule.radius);
-        Gizmos.DrawWireSphere(origin + Vector3.down * (capsule.height * 0.5f + groundCheckDistance), capsule.radius * 0.9f);
+        Bounds b = capsule.bounds;
+        float feetToCenter = Mathf.Max(0f, b.extents.y - capsule.radius);
+        Vector3 feetSphereCenter = b.center + Vector3.down * feetToCenter;
+        Gizmos.DrawWireSphere(feetSphereCenter + Vector3.down * Mathf.Max(0.01f, groundCheckDistance * 0.5f), Mathf.Max(0.01f, capsule.radius * 0.9f));
     }
 }

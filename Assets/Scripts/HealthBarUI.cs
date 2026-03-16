@@ -1,39 +1,85 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class HealthBarUI : MonoBehaviour
 {
     [Header("References")]
-    public Health targetHealth;          // Assign your Player's Health component here
-    public RectTransform barTransform;   // Assign the green panel RectTransform
+    public PlayerHealth targetHealth;
+    public Image fillImage;
+    public TMP_Text healthText;
 
-    private Vector2 originalSize;
+    [Header("Display")]
+    public bool showHealthNumbers = true;
+    public bool useColorGradient = true;
+    public Color emptyColor = Color.red;
+    public Color fullColor = Color.green;
 
-    private void Start()
+    private void Awake()
+    {
+        if (fillImage == null)
+            fillImage = GetComponent<Image>();
+    }
+
+    private void OnEnable()
     {
         if (targetHealth == null)
         {
             Debug.LogWarning("HealthBarUI: No targetHealth assigned!");
-            enabled = false;
             return;
         }
-
-        if (barTransform == null)
-            barTransform = GetComponent<RectTransform>();
-
-        originalSize = barTransform.sizeDelta;
 
         targetHealth.onDamaged.AddListener(UpdateBar);
         targetHealth.onHealed.AddListener(UpdateBar);
         targetHealth.onDied.AddListener(UpdateBar);
+        targetHealth.onHealthChanged.AddListener(UpdateBarFromValue);
 
         UpdateBar();
     }
 
+    private void OnDisable()
+    {
+        if (targetHealth == null)
+            return;
+
+        targetHealth.onDamaged.RemoveListener(UpdateBar);
+        targetHealth.onHealed.RemoveListener(UpdateBar);
+        targetHealth.onDied.RemoveListener(UpdateBar);
+        targetHealth.onHealthChanged.RemoveListener(UpdateBarFromValue);
+    }
+
     private void UpdateBar()
     {
-        if (targetHealth == null || barTransform == null) return;
+        if (targetHealth == null) return;
 
         float pct = Mathf.Clamp01(targetHealth.currentHealth / targetHealth.maxHealth);
-        barTransform.sizeDelta = new Vector2(originalSize.x * pct, originalSize.y);
+        ApplyVisuals(pct);
+    }
+
+    private void UpdateBarFromValue(float normalizedValue)
+    {
+        ApplyVisuals(normalizedValue);
+    }
+
+    private void ApplyVisuals(float normalizedValue)
+    {
+        float pct = Mathf.Clamp01(normalizedValue);
+
+        if (fillImage != null)
+        {
+            fillImage.fillAmount = pct;
+
+            if (useColorGradient)
+            {
+                fillImage.color = Color.Lerp(emptyColor, fullColor, pct);
+            }
+        }
+
+        if (healthText != null)
+        {
+            healthText.text = showHealthNumbers && targetHealth != null
+                ? $"{Mathf.CeilToInt(targetHealth.currentHealth)} / {Mathf.CeilToInt(targetHealth.maxHealth)}"
+                : string.Empty;
+        }
     }
 }

@@ -23,6 +23,11 @@ public class BuildMenu : MonoBehaviour
     
     void Start()
     {
+        isMenuOpen = false;
+        if (buildMenuCanvas != null)
+            buildMenuCanvas.gameObject.SetActive(false);
+        UpdateCursorState();
+
         // Setup preview manager
         if (previewManager != null)
             previewManager.SetupPreviews(buildingPrefabs);
@@ -73,9 +78,8 @@ public class BuildMenu : MonoBehaviour
         isMenuOpen = !isMenuOpen;
         if (buildMenuCanvas != null)
             buildMenuCanvas.gameObject.SetActive(isMenuOpen);
-        
-        // Unlock mouse when menu is open, lock when closed
-        Cursor.lockState = isMenuOpen ? CursorLockMode.None : CursorLockMode.Locked;
+
+        UpdateCursorState();
     }
     
     public bool IsMenuOpen()
@@ -101,6 +105,7 @@ public class BuildMenu : MonoBehaviour
         // Hide menu
         if (buildMenuCanvas != null)
             buildMenuCanvas.gameObject.SetActive(false);
+        UpdateCursorState();
         
         // Create preview object
         if (buildingPrefabs[selectedBuildingIndex] != null)
@@ -195,6 +200,15 @@ public class BuildMenu : MonoBehaviour
             Destroy(currentPreview);
             currentPreview = null;
         }
+
+        UpdateCursorState();
+    }
+
+    void UpdateCursorState()
+    {
+        bool buildingModeActive = isMenuOpen || isPlacingBuilding;
+        Cursor.lockState = buildingModeActive ? CursorLockMode.None : CursorLockMode.Locked;
+        Cursor.visible = buildingModeActive;
     }
     
     void SetPreviewTransparency()

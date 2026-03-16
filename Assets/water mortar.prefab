@@ -194,6 +194,7 @@ GameObject:
   - component: {fileID: 4678026127228354075}
   - component: {fileID: 7845127333627091127}
   - component: {fileID: 4541079105649923966}
+  - component: {fileID: 5531515118474847231}
   m_Layer: 0
   m_Name: sphere
   m_TagString: Untagged
@@ -294,6 +295,18 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &5531515118474847231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3216790855203772548}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 213038fd51961f34b9e803cfcffb68ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BubbleMortarProjectile
 --- !u!1 &4127062954403367122
 GameObject:
   m_ObjectHideFlags: 0
@@ -393,6 +406,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 298465999070929055}
+  - component: {fileID: 6918319440497117437}
   m_Layer: 0
   m_Name: water mortar
   m_TagString: Untagged
@@ -420,6 +434,30 @@ Transform:
   - {fileID: 5157199325074296231}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6918319440497117437
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8032162775300459409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a24566875f5fa474d89f50c5eb2343d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BubbleMortarTower
+  range: 12
+  targetMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  firePoint: {fileID: 4309591540907394218}
+  turretHead: {fileID: 4309591540907394218}
+  fireRate: 0.5
+  damage: 18
+  splashRadius: 3
+  projectileTravelTime: 0.8
+  arcHeight: 3
+  projectileVisualPrefab: {fileID: 0}
 --- !u!1 &8624251523114341908
 GameObject:
   m_ObjectHideFlags: 0

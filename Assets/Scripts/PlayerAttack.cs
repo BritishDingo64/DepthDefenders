@@ -42,10 +42,10 @@ public class PlayerAttack : MonoBehaviour
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, attackRange, hitMask))
         {
-            Health h = hit.collider.GetComponentInParent<Health>();
-            if (h != null)
+            EnemyHealth enemyHealth = hit.collider.GetComponentInParent<EnemyHealth>();
+            if (enemyHealth != null)
             {
-                h.TakeDamage(damage);
+                enemyHealth.TakeDamage(damage);
             }
 
             // optional: add hit VFX / sound here

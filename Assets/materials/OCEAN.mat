@@ -8,14 +8,14 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: OCEAN
-  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
-  m_Parent: {fileID: 2100000, guid: fda437983e2f4b94eb46c38b83ddb925, type: 2}
+  m_Shader: {fileID: 4800000, guid: 1b4a41939985c71419892a85da68c3aa, type: 3}
+  m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
+  m_ValidKeywords: []
+  m_InvalidKeywords:
   - _METALLICGLOSSMAP
   - _NORMALMAP
   - _PARALLAXMAP
-  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -30,6 +30,22 @@ Material:
         m_Texture: {fileID: 2800000, guid: 5a430c6e03d4b0e4a95e513f2b96eb88, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: 7a977fb82261d02428ce692e87f277f0, type: 3}
         m_Scale: {x: 5, y: 5}
@@ -38,14 +54,51 @@ Material:
         m_Texture: {fileID: 2800000, guid: 0157eda5fd0902746a1c8ac1403fe280, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _ParallaxMap:
         m_Texture: {fileID: 2800000, guid: b81de18edb1aadf468470afa8e89513b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Alpha: 0.8
+    - _BumpScale: 1
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _Distortion: 0.1518
+    - _DstBlend: 0
+    - _FlowSpeed: 1.1
+    - _FoamThreshold: 0.978
     - _GlossMapScale: 1
+    - _Glossiness: 0.5
+    - _GlossyReflections: 1
+    - _GlowIntensity: 2.31
+    - _Metallic: 0.95
+    - _Mode: 0
+    - _OcclusionStrength: 1
+    - _Parallax: 0.02
+    - _PulseAmount: 0.475
+    - _PulseSpeed: 0.54
+    - _RimPower: 4.91
+    - _RimStrength: 0.901
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _TextureStrength: 1.546
+    - _ToonSteps: 3.54
+    - _UVSec: 0
+    - _WaveAmplitude: 0.026
+    - _WaveFrequency: 6.09
+    - _WaveSpeed: 0.59
+    - _ZWrite: 1
     m_Colors:
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _DeepColor: {r: 0.03, g: 0.19999996, b: 0.45, a: 0.75}
     - _EmissionColor: {r: 0.07829986, g: 0.15438461, b: 0.23270428, a: 1}
+    - _FoamColor: {r: 1, g: 1, b: 1, a: 1}
+    - _ShallowColor: {r: 0.24999997, g: 0.8, b: 1, a: 0.75}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

@@ -1,11 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Spawner : MonoBehaviour {
-    //make an editor script that makes this run a line between the points.
     static int enemyCount;
     [SerializeField]
     List<Vector3> MonsterPath;
@@ -15,58 +12,112 @@ public class Spawner : MonoBehaviour {
     Color arrowColour;
     [SerializeField]
     List<Wave> waves;
+    [SerializeField]
+    float timeBetweenSpawns = 0.35f;
+    [SerializeField]
+    float timeBetweenSubWaves = 1f;
     public GameObject crystal;
     List<GameObject> instantiatedObjectPool = new();
-    private void Awake() {
-        for (int i = 0; i < waves.Count(); i++)
-            foreach (MonsterAndType a in waves[i].monsters)
-                a.monsterComponent = a.monster.GetComponent<Monster>();
-    }
-    void Start() {
-        StartCoroutine(PoolObjects(0));
-    }
-    IEnumerator PoolObjects(int wave) {
-        float timeAtStart = Time.deltaTime;
-        foreach (MonsterAndType monster in waves[wave].monsters) {
+    Crystal crystalComponent;
+    bool isSpawningWave;
+    int lastStartedWave;
 
-            while (instantiatedObjectPool.Where(x => x.name == monster.monsterComponent.name).Count() < monster.count) {
-                Debug.Log(instantiatedObjectPool.Count() + ", " + instantiatedObjectPool.Where(x => x.name == monster.monsterComponent.name).Count() + ", " + monster.monsterComponent.name);
-                GameObject instantiated = Instantiate(monster.monster);
-                instantiated.SetActive(false);
-                instantiated.transform.position = transform.position + Vector3.up;
-                if (instantiated.GetComponent<Monster>() == null) instantiated.AddComponent<Monster>();
-                instantiated.GetComponent<Monster>().name = monster.monsterComponent.name;
-                instantiated.GetComponent<Monster>().spawner = gameObject;
-                instantiated.GetComponent<Monster>().nextTarget = MonsterPath[0];
-                instantiatedObjectPool.Add(instantiated);
-                yield return null;
-            }
-        }
-        yield return null;
+    public static int ActiveEnemyCount => Mathf.Max(0, enemyCount);
+    public bool IsSpawningWave => isSpawningWave;
+    public int LastStartedWave => lastStartedWave;
+    public int TotalWaves => waves == null ? 0 : waves.Count;
+
+    private void Awake() {
+        if (crystal != null) crystalComponent = crystal.GetComponent<Crystal>();
     }
 
     void Update() {
-        if (HasWaveStarted()) {
-            StartCoroutine(nameof(StartWave));
+        if (CanStartWave()) {
+            StartCoroutine(StartWave());
         }
     }
-    bool HasWaveStarted() {
-        return crystal.GetComponent<Crystal>().waveStarted;
+
+    bool CanStartWave() {
+        return !isSpawningWave && crystalComponent != null && crystalComponent.waveStarted && crystalComponent.waveNumber > 0 && crystalComponent.waveNumber <= waves.Count && crystalComponent.waveNumber != lastStartedWave;
     }
+
+    public bool HasWaveConfigured(int waveNumber) {
+        return waveNumber > 0 && waveNumber <= TotalWaves;
+    }
+
+    public bool HasPendingOrActiveWave(int waveNumber) {
+        if (!HasWaveConfigured(waveNumber)) return false;
+        return isSpawningWave || lastStartedWave < waveNumber;
+    }
+
     IEnumerator StartWave() {
-        for (int i = 0; i < waves[crystal.GetComponent<Crystal>().waveNumber - 1].numberOfSubWaves; i++) {
-            foreach (MonsterAndType monsterType in waves[crystal.GetComponent<Crystal>().waveNumber - 1].monsters) {
-                for (int j = 0; j < monsterType.count / (waves[crystal.GetComponent<Crystal>().waveNumber - 1].numberOfSubWaves - i); j++) {
+        isSpawningWave = true;
+        int waveNumber = crystalComponent.waveNumber;
+        Wave currentWave = waves[waveNumber - 1];
+        int subWaveCount = Mathf.Max(1, currentWave.numberOfSubWaves);
+        Dictionary<MonsterAndType, int> remainingCounts = new();
+
+        foreach (MonsterAndType monsterType in currentWave.monsters) {
+            if (monsterType == null) continue;
+            remainingCounts[monsterType] = Mathf.Max(0, monsterType.count);
+        }
+
+        for (int subWaveIndex = 0; subWaveIndex < subWaveCount; subWaveIndex++) {
+            int remainingSubWaves = subWaveCount - subWaveIndex;
+
+            foreach (MonsterAndType monsterType in currentWave.monsters) {
+                if (monsterType == null || !remainingCounts.ContainsKey(monsterType)) continue;
+
+                int spawnCountThisSubWave = Mathf.CeilToInt((float)remainingCounts[monsterType] / remainingSubWaves);
+
+                for (int spawnIndex = 0; spawnIndex < spawnCountThisSubWave; spawnIndex++) {
                     SpawnMonster(monsterType.monster);
+
+                    if (timeBetweenSpawns > 0f) {
+                        yield return new WaitForSeconds(timeBetweenSpawns);
+                    }
                 }
+
+                remainingCounts[monsterType] -= spawnCountThisSubWave;
+            }
+
+            if (subWaveIndex < subWaveCount - 1 && timeBetweenSubWaves > 0f) {
+                yield return new WaitForSeconds(timeBetweenSubWaves);
             }
         }
+
+        lastStartedWave = waveNumber;
+        isSpawningWave = false;
         yield return null;
     }
+
     void SpawnMonster(GameObject monster) {
-        GameObject newMonster = Instantiate(monster);
+        if (monster == null) {
+            Debug.LogWarning($"{name} is missing an enemy prefab to spawn.", this);
+            return;
+        }
+
+        GameObject newMonster = Instantiate(monster, transform.position + Vector3.up, monster.transform.rotation);
         instantiatedObjectPool.Add(newMonster);
         enemyCount += 1;
+
+        Monster monsterComponent = newMonster.GetComponent<Monster>();
+        if (monsterComponent == null) monsterComponent = newMonster.AddComponent<Monster>();
+        monsterComponent.Initialize(this, crystal != null ? crystal.transform : null);
+    }
+
+    public void NotifyMonsterDestroyed() {
+        enemyCount = Mathf.Max(0, enemyCount - 1);
+    }
+
+    public int PathPointCount => MonsterPath == null ? 0 : MonsterPath.Count;
+
+    public Vector3 GetPathPoint(int index) {
+        return transform.position + MonsterPath[index];
+    }
+
+    public Transform GetCrystalTarget() {
+        return crystal != null ? crystal.transform : null;
     }
 
     public Vector3 NextPointFromPosition(Vector3 position, Vector3 lastKnownPosition) {
