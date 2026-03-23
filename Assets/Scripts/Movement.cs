@@ -11,6 +11,8 @@ public class AdvancedMovement : MonoBehaviour
     public float sprintSpeed = 9f;              // optional sprint speed
     [Range(0f, 1f)] public float groundAcceleration = 0.2f; // how fast velocity reaches target
     [Range(0f, 1f)] public float groundFriction = 0.08f;    // slows when no input
+    public float groundAccelerationRate = 28f;  // units/sec^2 while input is held
+    public float groundDecelerationRate = 34f;  // units/sec^2 when input is released
 
     [Header("Air")]
     public float airAcceleration = 0.05f;       // slower responsiveness in air
@@ -34,6 +36,11 @@ public class AdvancedMovement : MonoBehaviour
     public Transform playerObj;                // the player model/object to determine facing direction
     public bool allowSprint = true;
 
+    [Header("Animation")]
+    public Animator animator;
+    public string speedParameter = "speed";
+    public string jumpParameter = "jump";
+
     // private
     Rigidbody rb;
     CapsuleCollider capsule;
@@ -45,6 +52,8 @@ public class AdvancedMovement : MonoBehaviour
     int jumpsRemaining;
     float currentSpeedTarget;
     Vector3 currentVelocityXZ;
+    int speedParameterHash;
+    int jumpParameterHash;
 
     void Awake()
     {
@@ -65,6 +74,12 @@ public class AdvancedMovement : MonoBehaviour
         
         if (playerObj == null)
             playerObj = transform;
+
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
+
+        speedParameterHash = Animator.StringToHash(speedParameter);
+        jumpParameterHash = Animator.StringToHash(jumpParameter);
     }
 
     void Update()
@@ -108,23 +123,41 @@ public class AdvancedMovement : MonoBehaviour
         // smoothly adjust current XZ velocity towards desired
         Vector3 vel = rb.linearVelocity;
         Vector3 velXZ = new Vector3(vel.x, 0f, vel.z);
-        float accel = isGrounded ? (inputDirection.sqrMagnitude > 0.001f ? groundAcceleration : groundFriction) : airAcceleration;
 
         // choose how much control in air
         if (!isGrounded)
         {
+            float accel = airAcceleration;
             // blend between current velocity and desired with air control factor
             velXZ = Vector3.Lerp(velXZ, desiredVel, accel * (airControl));
         }
         else
         {
-            velXZ = Vector3.Lerp(velXZ, desiredVel, accel * 50f); // accelerate fast on ground
+            bool hasInput = inputDirection.sqrMagnitude > 0.001f;
+            float rate = hasInput ? groundAccelerationRate : groundDecelerationRate;
+
+            // Preserve old tuning fields while adding predictable accel/decel in units/sec^2.
+            float legacyScale = hasInput ? Mathf.Lerp(0.5f, 1.5f, groundAcceleration) : Mathf.Lerp(0.5f, 1.5f, groundFriction);
+            float maxDelta = rate * legacyScale * Time.fixedDeltaTime;
+
+            velXZ = Vector3.MoveTowards(velXZ, desiredVel, maxDelta);
         }
 
         rb.linearVelocity = new Vector3(velXZ.x, rb.linearVelocity.y, velXZ.z);
 
+        UpdateAnimatorSpeed();
+
         // gravity modifications for better jump feel
         ApplyCustomGravity();
+    }
+
+    void UpdateAnimatorSpeed()
+    {
+        if (animator == null) return;
+
+        Vector3 planarVelocity = rb.linearVelocity;
+        planarVelocity.y = 0f;
+        animator.SetFloat(speedParameterHash, planarVelocity.magnitude);
     }
 
     Vector3 ComputeDesiredVelocity()
@@ -206,6 +239,9 @@ public class AdvancedMovement : MonoBehaviour
         // Clear jump buffer
         lastJumpPressedTime = -999f;
         lastGroundedTime = -999f;
+
+        if (animator != null)
+            animator.SetTrigger(jumpParameterHash);
     }
 
     void GroundCheck()
