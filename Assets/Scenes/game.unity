@@ -700,7 +700,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 283504651}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.5126493, y: 0, z: 0, w: 0.8585982}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -2228,7 +2228,7 @@ Light:
   serializedVersion: 12
   m_Type: 1
   m_Color: {r: 0.62, g: 0.84, b: 0.93, a: 1}
-  m_Intensity: 0.71913284
+  m_Intensity: 0.687655
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -2290,7 +2290,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.55294895, y: -0.151845, z: 0.103310235, w: 0.8127223}
+  m_LocalRotation: {x: 0.5477069, y: -0.19183916, z: 0.13071518, w: 0.8038212}
   m_LocalPosition: {x: 0, y: 56.18, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -4105,7 +4105,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 407, y: -373}
+  m_AnchoredPosition: {x: 78, y: -454}
   m_SizeDelta: {x: 864.0793, y: 192.8539}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1148128649
@@ -11253,7 +11253,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -551, y: -467}
+  m_AnchoredPosition: {x: -551, y: -292}
   m_SizeDelta: {x: 864.0793, y: 192.8539}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2030717245
@@ -11893,8 +11893,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2137331105}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.04401477, y: 0.08674482, z: -0.0038362748, w: 0.9952504}
-  m_LocalPosition: {x: -39.467, y: 0.90999985, z: 5.8600006}
+  m_LocalRotation: {x: 0.51264936, y: 0, z: 0, w: 0.8585981}
+  m_LocalPosition: {x: -39.467, y: 6, z: 5.210001}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11975,7 +11975,7 @@ Camera:
     height: 1
   near clip plane: 0.1
   far clip plane: 5000
-  field of view: 45
+  field of view: 50
   orthographic: 0
   orthographic size: 10
   m_Depth: 0
@@ -12620,17 +12620,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Monster
   moveSpeed: 2.5
-  waypointReachedDistance: 0.25
-  crystalReachedDistance: 1
-  crystalAttackRange: 1.5
-  crystalDamagePerSecond: 10
-  barricadeDetectionRange: 7
-  barricadeAttackRange: 1.4
-  barricadeDamagePerSecond: 20
-  playerAttackRange: 1.5
-  playerDamagePerSecond: 12
-  playerAttackTickInterval: 0.25
-  playerStopBuffer: 0.35
+  distanceToReachAGivenPoint: 0.25
+  attackRange: 1.5
+  damagePerAttack: 10
+  detectionRange: 7
+  attackInterval: 0.25
   animator: {fileID: 3131530045289407774}
   useAnimationEventsForDamage: 1
   attackAnimationInterval: 0.7
