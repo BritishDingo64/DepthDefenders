@@ -8,7 +8,8 @@ public class AdvancedMovement : MonoBehaviour
 {
     [Header("Movement")]
     public float walkSpeed = 6f;                // target speed on ground
-    public float sprintSpeed = 9f;              // optional sprint speed
+    public float sprintSpeed = 9f;
+    public bool attack = false;
     [Range(0f, 1f)] public float groundAcceleration = 0.2f; // how fast velocity reaches target
     [Range(0f, 1f)] public float groundFriction = 0.08f;    // slows when no input
     public float groundAccelerationRate = 28f;  // units/sec^2 while input is held
@@ -40,6 +41,7 @@ public class AdvancedMovement : MonoBehaviour
     public Animator animator;
     public string speedParameter = "speed";
     public string jumpParameter = "jump";
+    public bool
 
     // private
     Rigidbody rb;
