@@ -169,7 +169,7 @@ public class UnderwaterLightRays : MonoBehaviour
 
         if (playerTarget == null)
         {
-            AdvancedMovement movement = FindFirstObjectByType<AdvancedMovement>();
+            Movement movement = FindFirstObjectByType<Movement>();
             if (movement != null)
                 playerTarget = movement.transform;
         }

@@ -246,7 +246,7 @@ public class Monster : MonoBehaviour {
             return;
         }
 
-        AdvancedMovement playerMovement = FindFirstObjectByType<AdvancedMovement>();
+        Movement playerMovement = FindFirstObjectByType<Movement>();
         if (playerMovement != null) {
             playerTarget = playerMovement.transform;
             playerHealth = playerMovement.GetComponent<PlayerHealth>();
@@ -255,7 +255,7 @@ public class Monster : MonoBehaviour {
             }
 
             if (debugLogs && playerHealth == null) {
-                Debug.LogWarning($"{name}: Found AdvancedMovement but no PlayerHealth nearby.");
+                Debug.LogWarning($"{name}: Found Movement but no PlayerHealth nearby.");
             }
         }
 

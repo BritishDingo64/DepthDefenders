@@ -1,10 +1,10 @@
-// AdvancedMovement.cs
+// Movement.cs
 // Attach to your player GameObject (requires Rigidbody + CapsuleCollider).
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(CapsuleCollider))]
-public class AdvancedMovement : MonoBehaviour
+public class Movement : MonoBehaviour
 {
     [Header("Movement")]
     public float walkSpeed = 6f;                // target speed on ground
@@ -41,7 +41,7 @@ public class AdvancedMovement : MonoBehaviour
     public Animator animator;
     public string speedParameter = "speed";
     public string jumpParameter = "jump";
-    public bool
+    public string airParameter = "air";
 
     // private
     Rigidbody rb;
@@ -56,6 +56,7 @@ public class AdvancedMovement : MonoBehaviour
     Vector3 currentVelocityXZ;
     int speedParameterHash;
     int jumpParameterHash;
+    int airParameterHash;
 
     void Awake()
     {
@@ -82,6 +83,7 @@ public class AdvancedMovement : MonoBehaviour
 
         speedParameterHash = Animator.StringToHash(speedParameter);
         jumpParameterHash = Animator.StringToHash(jumpParameter);
+        airParameterHash = Animator.StringToHash(airParameter);
     }
 
     void Update()
@@ -160,6 +162,7 @@ public class AdvancedMovement : MonoBehaviour
         Vector3 planarVelocity = rb.linearVelocity;
         planarVelocity.y = 0f;
         animator.SetFloat(speedParameterHash, planarVelocity.magnitude);
+        animator.SetBool(airParameterHash, !isGrounded);
     }
 
     Vector3 ComputeDesiredVelocity()
