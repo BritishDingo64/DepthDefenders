@@ -13,6 +13,8 @@ public class ThirdPersoncam : MonoBehaviour {
     public CameraStyle currentstyle;
     public GameObject CombatCam;
     public GameObject FreeLookCam;
+    [Header("Debug")]
+    public bool logOnStart = true;
     private BuildMenu buildMenu;
     public enum CameraStyle {
         basic,
@@ -23,6 +25,12 @@ public class ThirdPersoncam : MonoBehaviour {
         Cursor.visible = false;
         switchcameraStyle(CameraStyle.basic);
         buildMenu = FindFirstObjectByType<BuildMenu>();
+
+        if (logOnStart) {
+            Vector3 startViewDir = player.position - new Vector3(transform.position.x, player.position.y, transform.position.z);
+            bool startVectorIsZero = startViewDir.sqrMagnitude <= 0.0001f;
+            Debug.Log($"ThirdPersoncam initialized. Zero-vector guard active. Start view vector zero: {startVectorIsZero}");
+        }
     }
     private void Update() {
         // Don't lock/control camera if build menu is open
@@ -31,7 +39,9 @@ public class ThirdPersoncam : MonoBehaviour {
         
         //rotation orientation
         Vector3 viewDir = player.position - new Vector3(transform.position.x, player.position.y, transform.position.z);
-        orientation.forward = viewDir.normalized;
+        if (viewDir.sqrMagnitude > 0.0001f) {
+            orientation.forward = viewDir.normalized;
+        }
 
         //rotate player object
         if (currentstyle == CameraStyle.basic) {
@@ -45,9 +55,11 @@ public class ThirdPersoncam : MonoBehaviour {
             }
         } else if (currentstyle == CameraStyle.Combat) {
             Vector3 dirtocombatlookat = combatlookat.position - new Vector3(transform.position.x, combatlookat.position.y, transform.position.z);
-            orientation.forward = dirtocombatlookat.normalized;
-
-            playerobj.forward = dirtocombatlookat.normalized;
+            if (dirtocombatlookat.sqrMagnitude > 0.0001f) {
+                Vector3 combatDir = dirtocombatlookat.normalized;
+                orientation.forward = combatDir;
+                playerobj.forward = combatDir;
+            }
         }
     }
     private void switchcameraStyle(CameraStyle newStyle) {

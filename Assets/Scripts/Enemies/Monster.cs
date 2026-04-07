@@ -31,8 +31,6 @@ public class Monster : MonoBehaviour {
     [SerializeField]
     float attackAnimationInterval = 0.7f;
     [SerializeField]
-    string moveSpeedParam = "MoveSpeed";
-    [SerializeField]
     string isMovingParam = "IsMoving";
     [SerializeField]
     string attackTriggerParam = "Attack";
@@ -75,6 +73,9 @@ public class Monster : MonoBehaviour {
     int nextPathIndex;
     AttackTargetType queuedAttackTarget = AttackTargetType.None;
     float nextAnimationAttackTime;
+    bool hasIsMovingParam;
+    bool hasAttackTriggerParam;
+    bool hasAttackTargetParam;
 
     void Awake() {
         // set the health of this enemy.
@@ -87,6 +88,8 @@ public class Monster : MonoBehaviour {
         if (animator == null) {
             animator = GetComponentInChildren<Animator>();
         }
+
+        CacheAnimatorParameters();
 
         // get the navmesh agent of this enemy if it exists and the  collider of it
         navMeshAgent = GetComponent<NavMeshAgent>();
@@ -179,19 +182,23 @@ public class Monster : MonoBehaviour {
 
     Vector3 GetCurrentDestination() {
         if (ShouldChasePlayer()) {
-            return playerTarget.position;
+            // Stop moving if within attack range of player
+            if (IsWithinAttackRange(playerTarget, attackRange)) {
+                return transform.position;
+            }
+            return SnapToNavMesh(playerTarget.position);
         }
 
         if (HasBarricadeTarget()) {
-            return barricadeTarget.transform.position;
+            return SnapToNavMesh(barricadeTarget.transform.position);
         }
 
         if (spawner != null && nextPathIndex < spawner.PathPointCount) {
-            Vector3 waypoint = spawner.GetPathPoint(nextPathIndex);
+            Vector3 waypoint = SnapToNavMesh(spawner.GetPathPoint(nextPathIndex));
             if (Vector3.Distance(transform.position, waypoint) <= distanceToReachAGivenPoint) {
                 nextPathIndex++;
                 if (nextPathIndex < spawner.PathPointCount) {
-                    waypoint = spawner.GetPathPoint(nextPathIndex);
+                    waypoint = SnapToNavMesh(spawner.GetPathPoint(nextPathIndex));
                 }
             }
 
@@ -200,7 +207,18 @@ public class Monster : MonoBehaviour {
             }
         }
 
-        return crystalTarget != null ? crystalTarget.position : transform.position;
+        return crystalTarget != null ? SnapToNavMesh(crystalTarget.position) : transform.position;
+    }
+
+    Vector3 SnapToNavMesh(Vector3 worldPosition, float sampleDistance = 3f) {
+        if (navMeshAgent != null && navMeshAgent.enabled) {
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(worldPosition, out hit, sampleDistance, navMeshAgent.areaMask)) {
+                return hit.position;
+            }
+        }
+
+        return worldPosition;
     }
 
     bool ShouldChasePlayer() {
@@ -229,6 +247,10 @@ public class Monster : MonoBehaviour {
 
     void HandleDamaged() {
         hasBeenDamaged = true;
+
+        if (animator != null) {
+            animator.SetTrigger("GotHit");
+        }
     }
 
     void FindPlayerTarget() {
@@ -241,7 +263,7 @@ public class Monster : MonoBehaviour {
             }
 
             if (debugLogs && playerHealth == null) {
-                Debug.LogWarning($"{name}: Found player object by tag but no PlayerHealth on it.");
+                Debug.Log($"{name}: Found player object by tag but no PlayerHealth on it.");
             }
             return;
         }
@@ -255,7 +277,7 @@ public class Monster : MonoBehaviour {
             }
 
             if (debugLogs && playerHealth == null) {
-                Debug.LogWarning($"{name}: Found Movement but no PlayerHealth nearby.");
+                Debug.Log($"{name}: Found Movement but no PlayerHealth nearby.");
             }
         }
 
@@ -310,7 +332,7 @@ public class Monster : MonoBehaviour {
     void FaceCurrentAttackTarget() {
         Transform attackTarget = null;
 
-        if (ShouldChasePlayer() && IsWithinAttackRange(playerTarget, attackRange)) {
+        if (playerHealth != null && IsWithinAttackRange(playerTarget, GetPlayerStoppingDistance())) {
             attackTarget = playerTarget;
         }
         else if (HasBarricadeTarget() && IsWithinAttackRange(barricadeTarget.transform, attackRange)) {
@@ -341,17 +363,17 @@ public class Monster : MonoBehaviour {
         queuedAttackTarget = currentTarget;
         nextAnimationAttackTime = Time.time + Mathf.Max(0.05f, attackAnimationInterval);
 
-        if (!string.IsNullOrWhiteSpace(attackTargetParam)) {
+        if (hasAttackTargetParam) {
             animator.SetInteger(attackTargetParam, (int)currentTarget);
         }
 
-        if (!string.IsNullOrWhiteSpace(attackTriggerParam)) {
+        if (hasAttackTriggerParam) {
             animator.SetTrigger(attackTriggerParam);
         }
     }
 
     AttackTargetType ResolveAttackTargetInRange() {
-        if (ShouldChasePlayer() && playerHealth != null && IsWithinAttackRange(playerTarget, GetPlayerStoppingDistance())) {
+        if (playerHealth != null && IsWithinAttackRange(playerTarget, GetPlayerStoppingDistance())) {
             return AttackTargetType.Player;
         }
 
@@ -369,18 +391,35 @@ public class Monster : MonoBehaviour {
     void UpdateAnimatorMove(bool isMoving) {
         if (animator == null) return;
 
-        if (!string.IsNullOrWhiteSpace(isMovingParam)) {
+        if (hasIsMovingParam) {
             animator.SetBool(isMovingParam, isMoving);
-        }
-
-        if (!string.IsNullOrWhiteSpace(moveSpeedParam)) {
-            float normalizedMove = isMoving ? Mathf.Clamp01(speedMultiplier) : 0f;
-            animator.SetFloat(moveSpeedParam, normalizedMove);
         }
     }
 
+    void CacheAnimatorParameters() {
+        hasIsMovingParam = HasAnimatorParameter(isMovingParam, AnimatorControllerParameterType.Bool);
+        hasAttackTriggerParam = HasAnimatorParameter(attackTriggerParam, AnimatorControllerParameterType.Trigger);
+        hasAttackTargetParam = HasAnimatorParameter(attackTargetParam, AnimatorControllerParameterType.Int);
+    }
+
+    bool HasAnimatorParameter(string paramName, AnimatorControllerParameterType expectedType) {
+        if (animator == null || string.IsNullOrWhiteSpace(paramName)) {
+            return false;
+        }
+
+        AnimatorControllerParameter[] parameters = animator.parameters;
+        for (int i = 0; i < parameters.Length; i++) {
+            AnimatorControllerParameter parameter = parameters[i];
+            if (parameter != null && parameter.name == paramName && parameter.type == expectedType) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     void TryAttackPlayer() {
-        if (!ShouldChasePlayer() || playerHealth == null || damagePerAttack <= 0f) return;
+        if (playerHealth == null || damagePerAttack <= 0f) return;
         bool inRange = IsWithinAttackRange(playerTarget, GetPlayerStoppingDistance());
 
         if (debugLogs && inRange != wasInattackRange) {
@@ -477,8 +516,21 @@ public class Monster : MonoBehaviour {
         queuedAttackTarget = AttackTargetType.None;
     }
 
+    // Animation event aliases for clips that use common method names.
+    public void Attack() {
+        AnimationEvent_DealDamage();
+    }
+
+    public void DealDamage() {
+        AnimationEvent_DealDamage();
+    }
+
+    public void EndAttack() {
+        AnimationEvent_ClearQueuedAttack();
+    }
+
     void DealDamageToPlayerHit() {
-        if (!ShouldChasePlayer() || playerHealth == null || damagePerAttack <= 0f) return;
+        if (playerHealth == null || damagePerAttack <= 0f) return;
         if (!IsWithinAttackRange(playerTarget, GetPlayerStoppingDistance())) return;
 
         float damage = damagePerAttack * Mathf.Max(0.05f, attackAnimationInterval);

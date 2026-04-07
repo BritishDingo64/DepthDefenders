@@ -41978,7 +41978,7 @@ AnimationClip:
   - time: 0.6333333
     functionName: AnimationEvent_DealDamage
     data: 
-    objectReferenceParameter: {fileID: 0}
+    objectReferenceParameter: {fileID: 8027385768556020418, guid: 09099a2de469b604cabf2f7a72290e27, type: 3}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0

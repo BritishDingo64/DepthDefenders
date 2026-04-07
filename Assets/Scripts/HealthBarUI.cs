@@ -19,13 +19,15 @@ public class HealthBarUI : MonoBehaviour
     {
         if (fillImage == null)
             fillImage = GetComponent<Image>();
+
+        if (targetHealth == null)
+            targetHealth = FindFirstObjectByType<PlayerHealth>();
     }
 
     private void OnEnable()
     {
         if (targetHealth == null)
         {
-            Debug.LogWarning("HealthBarUI: No targetHealth assigned!");
             return;
         }
 

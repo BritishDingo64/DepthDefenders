@@ -50,6 +50,9 @@ public class Crystal : MonoBehaviour {
     float phaseFadeDuration = 0.35f;
     [SerializeField]
     float phaseVisibleDuration = 2f;
+    [Header("Debug")]
+    [SerializeField]
+    bool debugLogs;
 
     bool isGameOver;
     string temporaryStatusMessage;
@@ -207,7 +210,9 @@ public class Crystal : MonoBehaviour {
         //during the building phases the player can build and has the build camera mode. and during the combat phase the player has the combat camera mode and can attack monsters and has a health bar. the player can also see the wave number and how many monsters are left in the wave.
         if (!string.IsNullOrWhiteSpace(message)) {
             SetTemporaryStatus(message, 2f);
-            Debug.Log(message);
+            if (debugLogs) {
+                Debug.Log(message);
+            }
         }
 
         UpdateUI();

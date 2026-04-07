@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Spawner : MonoBehaviour {
     static int enemyCount;
@@ -21,6 +22,7 @@ public class Spawner : MonoBehaviour {
     Crystal crystalComponent;
     bool isSpawningWave;
     int lastStartedWave;
+    bool hasWarnedMissingEnemyPrefab;
 
     public static int ActiveEnemyCount => Mathf.Max(0, enemyCount);
     public bool IsSpawningWave => isSpawningWave;
@@ -93,16 +95,30 @@ public class Spawner : MonoBehaviour {
 
     void SpawnMonster(GameObject monster) {
         if (monster == null) {
-            Debug.LogWarning($"{name} is missing an enemy prefab to spawn.", this);
+            if (!hasWarnedMissingEnemyPrefab) {
+                Debug.LogWarning($"{name} is missing an enemy prefab to spawn.", this);
+                hasWarnedMissingEnemyPrefab = true;
+            }
             return;
         }
 
-        GameObject newMonster = Instantiate(monster, transform.position + Vector3.up, monster.transform.rotation);
+        Vector3 spawnPosition = transform.position;
+        NavMeshHit navHit;
+        if (NavMesh.SamplePosition(spawnPosition, out navHit, 2.5f, NavMesh.AllAreas)) {
+            spawnPosition = navHit.position;
+        }
+
+        GameObject newMonster = Instantiate(monster, spawnPosition, monster.transform.rotation);
         instantiatedObjectPool.Add(newMonster);
         enemyCount += 1;
 
         Monster monsterComponent = newMonster.GetComponent<Monster>();
-        if (monsterComponent == null) monsterComponent = newMonster.AddComponent<Monster>();
+        if (monsterComponent == null) {
+            monsterComponent = newMonster.GetComponentInChildren<Monster>();
+        }
+        if (monsterComponent == null) {
+            monsterComponent = newMonster.AddComponent<Monster>();
+        }
         monsterComponent.Initialize(this, crystal != null ? crystal.transform : null);
     }
 
