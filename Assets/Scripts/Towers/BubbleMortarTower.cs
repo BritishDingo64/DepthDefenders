@@ -15,18 +15,38 @@ public class BubbleMortarTower : MonoBehaviour
     [SerializeField] private float projectileTravelTime = 0.8f;
     [SerializeField] private float arcHeight = 3f;
     [SerializeField] private GameObject projectileVisualPrefab;
+    [SerializeField] private DamagePopup damagePopupPrefab;
+    [SerializeField] private Vector3 damagePopupOffset = new Vector3(0f, 1.5f, 0f);
 
     private float nextShotTime;
+    private Animator animator;
+    private bool hasTarget;
+    private bool isPlaced;
+
+    private void Start()
+    {
+        if (turretHead != null)
+        {
+            animator = turretHead.GetComponent<Animator>();
+        }
+    }
 
     private void Update()
     {
-        EnemyHealth target = TowerTargetingUtility.FindClosestEnemy(transform.position, range, targetMask);
-        if (target == null)
+        if (!isPlaced)
         {
             return;
         }
 
-        RotateTowards(target.transform.position);
+        EnemyHealth target = TowerTargetingUtility.FindClosestEnemy(transform.position, range, targetMask);
+        if (target == null)
+        {
+            hasTarget = false;
+            ResetAnimation();
+            return;
+        }
+
+        hasTarget = true;
 
         if (Time.time < nextShotTime)
         {
@@ -56,24 +76,21 @@ public class BubbleMortarTower : MonoBehaviour
             projectile = projectileObject.AddComponent<BubbleMortarProjectile>();
         }
 
-        projectile.Initialize(target.transform.position, damage, splashRadius, projectileTravelTime, arcHeight, targetMask);
+        projectile.Initialize(spawnPosition, target, target.transform.position, damage, splashRadius, projectileTravelTime, arcHeight, targetMask, damagePopupPrefab, damagePopupOffset);
     }
 
-    private void RotateTowards(Vector3 worldPosition)
+    private void ResetAnimation()
     {
-        Transform targetTransform = turretHead != null ? turretHead : transform;
-        Vector3 lookDirection = worldPosition - targetTransform.position;
-        lookDirection.y = 0f;
-
-        if (lookDirection.sqrMagnitude <= 0.001f)
+        if (animator != null)
         {
-            return;
+            animator.SetBool("IsAttacking", false);
+            animator.ResetTrigger("Attack");
         }
+    }
 
-        targetTransform.rotation = Quaternion.Slerp(
-            targetTransform.rotation,
-            Quaternion.LookRotation(lookDirection),
-            8f * Time.deltaTime);
+    public void PlaceTower()
+    {
+        isPlaced = true;
     }
 
     private void OnDrawGizmosSelected()

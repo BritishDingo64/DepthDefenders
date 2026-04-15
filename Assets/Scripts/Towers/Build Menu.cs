@@ -183,6 +183,13 @@ public class BuildMenu : MonoBehaviour
                 // Place the actual building
                 GameObject building = Instantiate(buildingPrefabs[selectedBuildingIndex], hit.point, currentPreview.transform.rotation);
                 
+                // Activate tower firing
+                BubbleMortarTower tower = building.GetComponent<BubbleMortarTower>();
+                if (tower != null)
+                {
+                    tower.PlaceTower();
+                }
+                
                 // Clean up and return to menu
                 CancelPlacement();
                 ToggleMenu(); // Reopen menu after placing
