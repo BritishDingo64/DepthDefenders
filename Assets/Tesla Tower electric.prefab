@@ -52,7 +52,7 @@ MonoBehaviour:
   targetMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  turretHead: {fileID: 0}
+  turretHead: {fileID: 291329851629937954}
   fireRate: 0.75
   damage: 10
   chainRange: 4

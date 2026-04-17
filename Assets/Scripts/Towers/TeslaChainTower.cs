@@ -13,6 +13,7 @@ public class TeslaChainTower : MonoBehaviour
     [SerializeField] private float damage = 10f;
     [SerializeField] private float chainRange = 4f;
     [SerializeField] private int maxChains = 3;
+    [SerializeField] private GameObject zapEffectPrefab;
 
     private float nextAttackTime;
 
@@ -39,6 +40,9 @@ public class TeslaChainTower : MonoBehaviour
     {
         List<EnemyHealth> chainedTargets = new List<EnemyHealth>();
         EnemyHealth currentTarget = firstTarget;
+        
+        // Determine the starting position for the zap (turret head if available, otherwise tower center)
+        Vector3 zapStartPos = turretHead != null ? turretHead.position : transform.position;
 
         for (int i = 0; i < Mathf.Max(1, maxChains) && currentTarget != null; i++)
         {
@@ -46,6 +50,10 @@ public class TeslaChainTower : MonoBehaviour
             {
                 currentTarget.TakeDamage(damage);
                 chainedTargets.Add(currentTarget);
+                
+                // Spawn zap effect
+                Vector3 fromPos = i == 0 ? zapStartPos : chainedTargets[i - 1].transform.position;
+                SpawnZapEffect(fromPos, currentTarget.transform.position);
             }
 
             currentTarget = FindNextChainTarget(currentTarget, chainedTargets);
@@ -75,6 +83,25 @@ public class TeslaChainTower : MonoBehaviour
         }
 
         return closestTarget;
+    }
+
+    private void SpawnZapEffect(Vector3 fromPosition, Vector3 toPosition)
+    {
+        if (zapEffectPrefab == null)
+        {
+            return;
+        }
+
+        GameObject zapInstance = Instantiate(zapEffectPrefab);
+        
+        TeslaZapEffect zapEffect = zapInstance.GetComponent<TeslaZapEffect>();
+        if (zapEffect != null)
+        {
+            zapEffect.SetPositions(fromPosition, toPosition);
+        }
+        
+        // Destroy the effect after a short duration
+        Destroy(zapInstance, 0.5f);
     }
 
     private void RotateTowards(Vector3 worldPosition)
