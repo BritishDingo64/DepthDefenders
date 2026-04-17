@@ -5,6 +5,7 @@ public class IceTower : MonoBehaviour
     [Header("Targeting")]
     [SerializeField] private float range = 8f;
     [SerializeField] private LayerMask targetMask = ~0;
+    [SerializeField] private Transform firePoint;
     [SerializeField] private Transform turretHead;
 
     [Header("Attack")]
@@ -12,8 +13,22 @@ public class IceTower : MonoBehaviour
     [SerializeField] private float damage = 12f;
     [SerializeField, Range(0.1f, 1f)] private float slowMultiplier = 0.5f;
     [SerializeField] private float slowDuration = 2f;
+    [SerializeField] private GameObject iciclePrefab;
+    [SerializeField] private float icicleSpeed = 20f;
+    [SerializeField] private Vector3 impactOffset = new Vector3(0f, 0.8f, 0f);
 
     private float nextShotTime;
+    private Vector3 initialTurretLocalEuler;
+    private bool hasInitialTurretLocalEuler;
+
+    private void Start()
+    {
+        if (turretHead != null)
+        {
+            initialTurretLocalEuler = turretHead.localEulerAngles;
+            hasInitialTurretLocalEuler = true;
+        }
+    }
 
     private void Update()
     {
@@ -41,6 +56,33 @@ public class IceTower : MonoBehaviour
             return;
         }
 
+        Vector3 spawnPosition = firePoint != null
+            ? firePoint.position
+            : (turretHead != null ? turretHead.position : transform.position + Vector3.up);
+
+        if (iciclePrefab == null)
+        {
+            ApplyHitEffects(target);
+            return;
+        }
+
+        GameObject icicleInstance = Instantiate(iciclePrefab, spawnPosition, Quaternion.identity);
+        IceProjectile projectile = icicleInstance.GetComponent<IceProjectile>();
+        if (projectile == null)
+        {
+            projectile = icicleInstance.AddComponent<IceProjectile>();
+        }
+
+        projectile.Initialize(target, damage, slowMultiplier, slowDuration, icicleSpeed, impactOffset);
+    }
+
+    private void ApplyHitEffects(EnemyHealth target)
+    {
+        if (target == null || target.IsDead)
+        {
+            return;
+        }
+
         target.TakeDamage(damage);
 
         Monster monster = target.GetComponent<Monster>();
@@ -61,9 +103,28 @@ public class IceTower : MonoBehaviour
             return;
         }
 
+        if (targetTransform == turretHead && hasInitialTurretLocalEuler)
+        {
+            Transform parent = turretHead.parent;
+            Vector3 localDirection = parent != null
+                ? parent.InverseTransformDirection(lookDirection.normalized)
+                : lookDirection.normalized;
+
+            float targetYaw = Mathf.Atan2(localDirection.x, localDirection.z) * Mathf.Rad2Deg;
+            Vector3 desiredEuler = initialTurretLocalEuler;
+            desiredEuler.y = initialTurretLocalEuler.y + targetYaw;
+
+            Quaternion desiredLocalRotation = Quaternion.Euler(desiredEuler);
+            turretHead.localRotation = Quaternion.Slerp(
+                turretHead.localRotation,
+                desiredLocalRotation,
+                10f * Time.deltaTime);
+            return;
+        }
+
         targetTransform.rotation = Quaternion.Slerp(
             targetTransform.rotation,
-            Quaternion.LookRotation(lookDirection),
+            Quaternion.LookRotation(lookDirection.normalized, Vector3.up),
             10f * Time.deltaTime);
     }
 
