@@ -6,6 +6,7 @@ using UnityEngine;
 [RequireComponent(typeof(CapsuleCollider))]
 public class Movement : MonoBehaviour
 {
+    // Handles walking, sprinting, jumping, air control, and ground detection.
     [Header("Movement")]
     public float walkSpeed = 6f;                // target speed on ground
     public float sprintSpeed = 9f;
@@ -60,6 +61,7 @@ public class Movement : MonoBehaviour
 
     void Awake()
     {
+        // Cache the physics components and configure the rigidbody for character movement.
         rb = GetComponent<Rigidbody>();
         capsule = GetComponent<CapsuleCollider>();
 
@@ -71,6 +73,7 @@ public class Movement : MonoBehaviour
 
     void Start()
     {
+        // Initialize jump state and default references.
         jumpsRemaining = extraJumps;
         if (orientation == null)
             orientation = Camera.main ? Camera.main.transform : transform;
@@ -88,7 +91,7 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
-        // Read input (swap to new Input System if needed)
+        // Read movement and jump input every frame.
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
         bool jumpPressed = Input.GetButtonDown("Jump");
@@ -116,6 +119,7 @@ public class Movement : MonoBehaviour
 
     void FixedUpdate()
     {
+        // Physics update for movement and jump handling.
         GroundCheck();
 
         // handle jump buffer + coyote + extra jumps
@@ -157,6 +161,7 @@ public class Movement : MonoBehaviour
 
     void UpdateAnimatorSpeed()
     {
+        // Update animator parameters for movement and air state.
         if (animator == null) return;
 
         Vector3 planarVelocity = rb.linearVelocity;
@@ -167,7 +172,7 @@ public class Movement : MonoBehaviour
 
     Vector3 ComputeDesiredVelocity()
     {
-        // Project movement onto contact plane so we can walk slopes naturally
+        // Compute the desired velocity vector based on input and ground slope.
         Vector3 planarForward = Vector3.Cross(transform.right, contactNormal).normalized;
         Vector3 planarRight = Vector3.Cross(contactNormal, transform.forward).normalized;
         // But simpler: project input direction onto plane
@@ -199,7 +204,7 @@ public class Movement : MonoBehaviour
 
     void TryHandleJumping()
     {
-        // if grounded update grounded timer
+        // Use jump buffering and coyote time to make jumping feel responsive.
         if (isGrounded)
         {
             lastGroundedTime = Time.time;
@@ -234,6 +239,7 @@ public class Movement : MonoBehaviour
 
     void DoJump()
     {
+        // Apply vertical velocity for a jump and reset jump timers.
         Vector3 v = rb.linearVelocity;
         // Remove any downward velocity before applying jump for consistency
         if (v.y < 0f) v.y = 0f;
@@ -315,6 +321,7 @@ public class Movement : MonoBehaviour
     // Optional: visualize ground check for debugging
     void OnDrawGizmosSelected()
     {
+        // Draw the ground check sphere in the editor for debugging.
         if (capsule == null) capsule = GetComponent<CapsuleCollider>();
         if (capsule == null) return;
 

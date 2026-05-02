@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Visual effect for Tesla chain lightning with a line renderer and optional impact particles.
 public class TeslaZapEffect : MonoBehaviour
 {
     private LineRenderer lineRenderer;
@@ -7,6 +8,7 @@ public class TeslaZapEffect : MonoBehaviour
 
     private void Awake()
     {
+        // Create the lightning line renderer and configure a glowing material.
         // Create LineRenderer
         lineRenderer = gameObject.AddComponent<LineRenderer>();
         lineRenderer.widthMultiplier = 0.1f;
@@ -30,6 +32,7 @@ public class TeslaZapEffect : MonoBehaviour
 
     public void SetPositions(Vector3 startPos, Vector3 endPos)
     {
+        // Configure the zap effect positions and orientation.
         // Draw jagged lightning line between start and end positions
         if (lineRenderer != null)
         {
@@ -54,6 +57,7 @@ public class TeslaZapEffect : MonoBehaviour
 
     private Vector3[] GenerateLightningPath(Vector3 start, Vector3 end)
     {
+        // Generate intermediate positions for a jagged lightning bolt.
         // Create jagged lightning bolt path
         Vector3 direction = end - start;
         float distance = direction.magnitude;

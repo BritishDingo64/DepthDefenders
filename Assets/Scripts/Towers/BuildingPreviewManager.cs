@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// Manages live rotating mini-previews of building prefabs in the build menu UI.
 public class BuildingPreviewManager : MonoBehaviour
 {
     [Header("Preview Settings")]
@@ -30,6 +31,7 @@ public class BuildingPreviewManager : MonoBehaviour
     
     public void SetupPreviews(GameObject[] buildingPrefabs)
     {
+        // Create preview cameras and models for each building prefab.
         buildMenu = GetComponent<BuildMenu>();
         int buildingCount = buildingPrefabs.Length;
         
@@ -122,6 +124,7 @@ public class BuildingPreviewManager : MonoBehaviour
 
     private void LateUpdate()
     {
+        // Update preview camera positions if preview settings were changed in the inspector.
         if (previewCameras == null || previewModels == null || previewAnchors == null)
             return;
 
@@ -167,6 +170,7 @@ public class BuildingPreviewManager : MonoBehaviour
 
     private void UpdatePreviewCamera(int index)
     {
+        // Position the preview camera so the model is framed correctly.
         if (previewCameras == null || previewModels == null || previewAnchors == null)
             return;
 
@@ -192,6 +196,7 @@ public class BuildingPreviewManager : MonoBehaviour
 
     private void CenterPreviewModel(int index)
     {
+        // Center the preview model within its anchor so it looks good in the render texture.
         if (previewModels == null || previewAnchors == null)
             return;
 

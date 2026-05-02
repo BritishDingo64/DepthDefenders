@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [RequireComponent(typeof(Collider))]
+// Tracks the current and maximum health of an enemy and exposes events for damage, healing, and death.
 public class EnemyHealth : MonoBehaviour
 {
     [System.Serializable]
@@ -25,6 +26,7 @@ public class EnemyHealth : MonoBehaviour
 
     private void Awake()
     {
+        // Ensure starting health is valid and notify listeners of the initial health ratio.
         currentHealth = Mathf.Clamp(currentHealth <= 0f ? maxHealth : currentHealth, 0f, maxHealth);
         onHealthChanged?.Invoke(currentHealth / maxHealth);
     }
@@ -50,6 +52,7 @@ public class EnemyHealth : MonoBehaviour
 
     public void Heal(float amount)
     {
+        // Restore health without exceeding max, and notify listeners.
         if (IsDead) return;
         if (amount <= 0f) return;
 
@@ -71,6 +74,7 @@ public class EnemyHealth : MonoBehaviour
 
     private void Die()
     {
+        // Disable colliders and optionally destroy the enemy object.
         if (disableCollidersOnDeath)
         {
             Collider[] colliders = GetComponentsInChildren<Collider>();

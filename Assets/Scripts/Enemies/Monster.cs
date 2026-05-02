@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+// Controls individual enemy movement, target selection, combat, and animations.
 public class Monster : MonoBehaviour {
     enum AttackTargetType {
         None = 0,
@@ -78,7 +79,7 @@ public class Monster : MonoBehaviour {
     bool hasAttackTargetParam;
 
     void Awake() {
-        // set the health of this enemy.
+        // Initialize components and links for enemy behavior.
         enemyHealth = GetComponent<EnemyHealth>();
         if (enemyHealth != null) {
             enemyHealth.onDamaged.AddListener(HandleDamaged);
@@ -103,6 +104,7 @@ public class Monster : MonoBehaviour {
     }
 
     void OnDestroy() {
+        // Unsubscribe to prevent dangling event listeners and notify the spawner when destroyed.
         if (enemyHealth != null) {
             enemyHealth.onDamaged.RemoveListener(HandleDamaged);
         }
@@ -114,6 +116,7 @@ public class Monster : MonoBehaviour {
     }
 
     public void Initialize(Spawner owningSpawner, Transform crystal) {
+        // Set references used during movement and combat.
         spawner = owningSpawner;
         crystalTarget = crystal;
         nextPathIndex = 0;
@@ -124,6 +127,7 @@ public class Monster : MonoBehaviour {
     }
 
     void Update() {
+        // Ensure current targets are known, then choose movement and attack behavior.
         if (crystalTarget == null && spawner != null) {
             crystalTarget = spawner.GetCrystalTarget();
         }
@@ -181,6 +185,7 @@ public class Monster : MonoBehaviour {
     }
 
     Vector3 GetCurrentDestination() {
+        // Decide whether to chase player, barricade, follow path, or move toward the crystal.
         if (ShouldChasePlayer()) {
             // Stop moving if within attack range of player
             if (IsWithinAttackRange(playerTarget, attackRange)) {
@@ -246,6 +251,7 @@ public class Monster : MonoBehaviour {
     }
 
     void HandleDamaged() {
+        // When damaged, the monster becomes aggressive and may play a hit animation.
         hasBeenDamaged = true;
 
         if (animator != null) {
@@ -254,6 +260,7 @@ public class Monster : MonoBehaviour {
     }
 
     void FindPlayerTarget() {
+        // Find the player by tag or fall back to other player-related components.
         GameObject playerObj = GameObject.FindGameObjectWithTag(playerTag);
         if (playerObj != null) {
             playerTarget = playerObj.transform;
@@ -294,6 +301,7 @@ public class Monster : MonoBehaviour {
     }
 
     void MoveTowards(Vector3 destination, float stoppingDistance) {
+        // Move the monster toward the current destination, using NavMesh when available.
         Vector3 direction = destination - transform.position;
         bool isMoving = direction.sqrMagnitude > stoppingDistance * stoppingDistance;
 
@@ -330,6 +338,7 @@ public class Monster : MonoBehaviour {
     }
 
     void FaceCurrentAttackTarget() {
+        // Rotate toward the current attack target for a more natural combat orientation.
         Transform attackTarget = null;
 
         if (playerHealth != null && IsWithinAttackRange(playerTarget, GetPlayerStoppingDistance())) {
@@ -352,6 +361,7 @@ public class Monster : MonoBehaviour {
     }
 
     bool ShouldUseAnimationAttackFlow() {
+        // Determine whether this monster uses animation events to deal damage.
         return useAnimationEventsForDamage && animator != null;
     }
 
@@ -373,6 +383,7 @@ public class Monster : MonoBehaviour {
     }
 
     AttackTargetType ResolveAttackTargetInRange() {
+        // Choose the highest-priority target that is currently within attack range.
         if (playerHealth != null && IsWithinAttackRange(playerTarget, GetPlayerStoppingDistance())) {
             return AttackTargetType.Player;
         }
@@ -419,6 +430,7 @@ public class Monster : MonoBehaviour {
     }
 
     void TryAttackPlayer() {
+        // If a player is in range, damage them over time based on attack interval.
         if (playerHealth == null || damagePerAttack <= 0f) return;
         bool inRange = IsWithinAttackRange(playerTarget, GetPlayerStoppingDistance());
 
@@ -442,6 +454,7 @@ public class Monster : MonoBehaviour {
     }
 
     void TryAttackCrystal() {
+        // Deal damage to the crystal only when not distracted by player or barricade.
         if (ShouldChasePlayer() || HasBarricadeTarget()) return;
         if (crystalTarget == null || damagePerAttack <= 0f) return;
         if (!IsWithinAttackRange(crystalTarget, attackRange)) return;
@@ -455,6 +468,7 @@ public class Monster : MonoBehaviour {
     }
 
     void TryAttackBarricade() {
+        // If a barricade is the current target, deal damage to it.
         if (!HasBarricadeTarget() || damagePerAttack <= 0f) return;
         if (!IsWithinAttackRange(barricadeTarget.transform, attackRange)) return;
 
@@ -462,6 +476,7 @@ public class Monster : MonoBehaviour {
     }
 
     void RefreshBarricadeTarget() {
+        // Update barricade target only when the monster is not chasing the player.
         if (ShouldChasePlayer()) {
             barricadeTarget = null;
             return;
@@ -482,6 +497,7 @@ public class Monster : MonoBehaviour {
     }
 
     void UpdateStatusEffects() {
+        // Restore normal speed when slow effects expire.
         if (Time.time > slowEndsAt) {
             speedMultiplier = 1f;
         }
@@ -492,11 +508,13 @@ public class Monster : MonoBehaviour {
     }
 
     public void ApplySlow(float multiplier, float duration) {
+        // Apply a temporary slow effect, reducing movement speed.
         speedMultiplier = Mathf.Clamp(multiplier, 0.05f, 1f);
         slowEndsAt = Mathf.Max(slowEndsAt, Time.time + Mathf.Max(0f, duration));
     }
 
     public void AnimationEvent_DealDamage() {
+        // This method is called by animation events to apply damage at the correct frame.
         if (!ShouldUseAnimationAttackFlow()) return;
 
         switch (queuedAttackTarget) {
@@ -513,6 +531,7 @@ public class Monster : MonoBehaviour {
     }
 
     public void AnimationEvent_ClearQueuedAttack() {
+        // Clear the stored attack target when the animation finishes.
         queuedAttackTarget = AttackTargetType.None;
     }
 
@@ -564,6 +583,7 @@ public class Monster : MonoBehaviour {
     }
 
     bool IsWithinAttackRange(Transform target, float range) {
+        // Check horizontal distance against attack range.
         if (target == null) return false;
 
         Vector3 offset = target.position - transform.position;

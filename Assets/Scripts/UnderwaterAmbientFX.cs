@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [ExecuteAlways]
+// Applies fog, ambient lighting, and floating particle motes for underwater scenes.
 public class UnderwaterAmbientFX : MonoBehaviour
 {
     [Header("Target")]
@@ -40,6 +41,7 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
     private void OnEnable()
     {
+        // Called when the script becomes enabled; initialize target, fog, and particles.
         ResolveTarget();
         CaptureMotesOrigin();
         ApplyEnvironment();
@@ -58,6 +60,7 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
     private void OnValidate()
     {
+        // Clamp inspector values so the particle system is always valid.
         particleBox.x = Mathf.Max(1f, particleBox.x);
         particleBox.y = Mathf.Max(1f, particleBox.y);
         particleBox.z = Mathf.Max(1f, particleBox.z);
@@ -76,6 +79,7 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
     private void ResolveTarget()
     {
+        // Find the player transform in the scene to anchor the underwater effect.
         if (playerTarget == null)
         {
             GameObject taggedPlayer = GameObject.FindGameObjectWithTag("Player");
@@ -93,6 +97,7 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
     private void CaptureMotesOrigin()
     {
+        // Capture the starting origin for the particle motes, either from the player or a fixed override.
         if (usePlayerStartAsMotesOrigin && playerTarget != null)
         {
             motesOrigin = playerTarget.position + motesOriginOffset;
@@ -106,6 +111,7 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
     private void ApplyEnvironment()
     {
+        // Apply fog and ambient lighting settings for the underwater look.
         if (applyFog)
         {
             RenderSettings.fog = true;
@@ -126,6 +132,7 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
     private void EnsureMotes()
     {
+        // Create or configure the underwater mote particle system.
         if (!spawnMotes)
         {
             if (motes != null)
@@ -229,6 +236,7 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
     private void UpdateMotes()
     {
+        // Keep the mote emitter positioned relative to the origin anchor.
         if (motes == null || !spawnMotes)
             return;
 
@@ -240,6 +248,7 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
     private void EnsureParticleMaterial(ParticleSystemRenderer renderer)
     {
+        // Make sure the particle renderer has a usable material for the underwater motes.
         if (renderer == null) return;
 
         if (particleMaterial != null)

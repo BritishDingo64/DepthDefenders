@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Tower that zaps a primary enemy and chains lightning to nearby enemies.
 public class TeslaChainTower : MonoBehaviour
 {
     [Header("Targeting")]
@@ -19,6 +20,7 @@ public class TeslaChainTower : MonoBehaviour
 
     private void Update()
     {
+        // Find a target and fire a chain attack when ready.
         EnemyHealth firstTarget = TowerTargetingUtility.FindClosestEnemy(transform.position, range, targetMask);
         if (firstTarget == null)
         {
@@ -38,6 +40,7 @@ public class TeslaChainTower : MonoBehaviour
 
     private void FireChain(EnemyHealth firstTarget)
     {
+        // Apply damage to the first target and chain to adjacent enemies.
         List<EnemyHealth> chainedTargets = new List<EnemyHealth>();
         EnemyHealth currentTarget = firstTarget;
         
@@ -62,6 +65,7 @@ public class TeslaChainTower : MonoBehaviour
 
     private EnemyHealth FindNextChainTarget(EnemyHealth fromTarget, List<EnemyHealth> excludedTargets)
     {
+        // Find the next closest enemy eligible for chaining.
         List<EnemyHealth> nearbyTargets = TowerTargetingUtility.FindEnemiesInRange(fromTarget.transform.position, chainRange, targetMask);
         EnemyHealth closestTarget = null;
         float closestDistance = float.MaxValue;

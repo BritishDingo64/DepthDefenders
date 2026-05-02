@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+// Manages spawning enemy waves, pathing, and tracking active enemies.
 public class Spawner : MonoBehaviour {
     static int enemyCount;
     [SerializeField]
@@ -30,6 +31,7 @@ public class Spawner : MonoBehaviour {
     public int TotalWaves => waves == null ? 0 : waves.Count;
 
     private void Awake() {
+        // Cache the crystal component to know when waves should start.
         if (crystal != null) crystalComponent = crystal.GetComponent<Crystal>();
     }
 
@@ -40,6 +42,7 @@ public class Spawner : MonoBehaviour {
     }
 
     bool CanStartWave() {
+        // Only start a spawn coroutine when a new wave has been triggered by the crystal.
         return !isSpawningWave && crystalComponent != null && crystalComponent.waveStarted && crystalComponent.waveNumber > 0 && crystalComponent.waveNumber <= waves.Count && crystalComponent.waveNumber != lastStartedWave;
     }
 
@@ -53,6 +56,7 @@ public class Spawner : MonoBehaviour {
     }
 
     IEnumerator StartWave() {
+        // Spawn enemies across subwaves for the current wave.
         isSpawningWave = true;
         int waveNumber = crystalComponent.waveNumber;
         Wave currentWave = waves[waveNumber - 1];
@@ -94,6 +98,7 @@ public class Spawner : MonoBehaviour {
     }
 
     void SpawnMonster(GameObject monster) {
+        // Instantiate a monster prefab and initialize its behavior.
         if (monster == null) {
             if (!hasWarnedMissingEnemyPrefab) {
                 Debug.LogWarning($"{name} is missing an enemy prefab to spawn.", this);
@@ -123,6 +128,7 @@ public class Spawner : MonoBehaviour {
     }
 
     public void NotifyMonsterDestroyed() {
+        // Decrement the shared active enemy counter when a monster is destroyed.
         enemyCount = Mathf.Max(0, enemyCount - 1);
     }
 
@@ -146,6 +152,7 @@ public class Spawner : MonoBehaviour {
     }
     #region DrawPath
     private void OnDrawGizmosSelected() {
+        // Visualize the monster path in the editor when the spawner is selected.
         if (MonsterPath.Count == 0) return;
         for (int i = 0; i < MonsterPath.Count; i++) {
             if (i == 0) {

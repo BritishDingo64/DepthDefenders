@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [RequireComponent(typeof(Collider))]
+// Represents a destructible barricade that enemies can attack and which can draw aggro.
 public class BarricadeDefenseTower : MonoBehaviour
 {
     public static readonly List<BarricadeDefenseTower> ActiveBarricades = new List<BarricadeDefenseTower>();
@@ -28,6 +29,7 @@ public class BarricadeDefenseTower : MonoBehaviour
 
     private void Awake()
     {
+        // Initialize barricade health and notify listeners.
         currentHealth = Mathf.Clamp(currentHealth <= 0f ? maxHealth : currentHealth, 0f, maxHealth);
         onHealthChanged?.Invoke(currentHealth / maxHealth);
     }
@@ -47,6 +49,7 @@ public class BarricadeDefenseTower : MonoBehaviour
 
     public bool TakeDamage(float amount)
     {
+        // Reduce barricade health and destroy if depleted.
         if (IsDestroyed || amount <= 0f)
         {
             return false;
@@ -72,6 +75,7 @@ public class BarricadeDefenseTower : MonoBehaviour
 
     public static BarricadeDefenseTower GetClosestActiveBarricade(Vector3 fromPosition, float maxDetectionRange)
     {
+        // Return the closest active barricade within range for enemy targeting.
         BarricadeDefenseTower closestBarricade = null;
         float closestDistance = float.MaxValue;
 

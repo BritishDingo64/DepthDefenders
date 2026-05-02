@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+// Updates the health bar UI based on the player's current health.
 public class HealthBarUI : MonoBehaviour
 {
     [Header("References")]
@@ -17,6 +18,7 @@ public class HealthBarUI : MonoBehaviour
 
     private void Awake()
     {
+        // Cache references if not assigned in Inspector.
         if (fillImage == null)
             fillImage = GetComponent<Image>();
 
@@ -31,6 +33,7 @@ public class HealthBarUI : MonoBehaviour
             return;
         }
 
+        // Subscribe to player health events so UI updates automatically.
         targetHealth.onDamaged.AddListener(UpdateBar);
         targetHealth.onHealed.AddListener(UpdateBar);
         targetHealth.onDied.AddListener(UpdateBar);
@@ -44,6 +47,7 @@ public class HealthBarUI : MonoBehaviour
         if (targetHealth == null)
             return;
 
+        // Unsubscribe from events when disabled.
         targetHealth.onDamaged.RemoveListener(UpdateBar);
         targetHealth.onHealed.RemoveListener(UpdateBar);
         targetHealth.onDied.RemoveListener(UpdateBar);
@@ -73,6 +77,7 @@ public class HealthBarUI : MonoBehaviour
 
             if (useColorGradient)
             {
+                // Lerp between empty and full colors based on health.
                 fillImage.color = Color.Lerp(emptyColor, fullColor, pct);
             }
         }

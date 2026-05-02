@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
+// Manages the player's health, death behavior, ragdoll, and optional respawn sequence.
 public class PlayerHealth : MonoBehaviour
 {
     [System.Serializable]
@@ -37,6 +38,7 @@ public class PlayerHealth : MonoBehaviour
 
     private void Awake()
     {
+        // Initialize health and cache components used for ragdoll and respawn.
         currentHealth = Mathf.Clamp(currentHealth <= 0f ? maxHealth : currentHealth, 0f, maxHealth);
         onHealthChanged?.Invoke(currentHealth / maxHealth);
         characterController = GetComponent<CharacterController>();
@@ -54,6 +56,7 @@ public class PlayerHealth : MonoBehaviour
 
     public bool TakeDamage(float amount)
     {
+        // Apply damage to the player and trigger death if health reaches zero.
         if (!canTakeDamage || IsDead) return false;
         if (amount <= 0f) return false;
 
@@ -73,6 +76,7 @@ public class PlayerHealth : MonoBehaviour
 
     public void Heal(float amount)
     {
+        // Restore player health while alive.
         if (IsDead) return;
         if (amount <= 0f) return;
 
@@ -94,6 +98,7 @@ public class PlayerHealth : MonoBehaviour
 
     private void Die()
     {
+        // Activate ragdoll and optionally start a respawn routine.
         SetRagdollActive(true);
 
         if (respawnOnDeath)
@@ -107,6 +112,7 @@ public class PlayerHealth : MonoBehaviour
 
     private IEnumerator RespawnRoutine()
     {
+        // Countdown and restore the player at the respawn point.
         SetCanTakeDamage(false);
 
         if (respawnCountdownText != null)
@@ -163,6 +169,7 @@ public class PlayerHealth : MonoBehaviour
 
     private void EnsureRespawnCountdownText()
     {
+        // Ensure a UI text element exists to show the respawn timer.
         if (respawnCountdownText != null)
         {
             respawnCountdownText.gameObject.SetActive(false);
@@ -211,6 +218,7 @@ public class PlayerHealth : MonoBehaviour
 
     private void SetRagdollActive(bool active)
     {
+        // Toggle ragdoll mode on or off by enabling/disabling bones and animator.
         if (ragdollActive == active)
             return;
 

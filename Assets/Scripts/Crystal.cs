@@ -3,8 +3,12 @@ using TMPro;
 using System.Collections.Generic;
 using System.Collections;
 
+// Controls the crystal as the central objective for survival waves.
+// It tracks wave state, player input for starting waves, crystal health, UI updates, and game-over state.
 public class Crystal : MonoBehaviour {
+    // Whether a wave is currently active.
     public bool waveStarted;
+    // Current wave number completed/active.
     public int waveNumber;
 
     [Header("References")]
@@ -60,32 +64,36 @@ public class Crystal : MonoBehaviour {
     string lastPhaseLabel;
     Coroutine phaseTextFadeRoutine;
 
-    // crystal is the target for the monsters, if the monsters reach the crystal they attack it
-    // once the crystal's health reaches 0, the player loses and the game is over
-    // the player can start a wave of monsters by looking at the crystal and pressing the "e" key, this will trigger the monsters to start spawning and attacking the crystal
-    // the player can also start a wave by pressing the "x" key, this way the player can remotely start the wave
     void Start() {
+        // Initialize crystal health and clamp to range.
         currentHealth = Mathf.Clamp(currentHealth <= 0f ? maxHealth : currentHealth, 0f, maxHealth);
 
+        // Ensure any spawners in the scene are linked to this crystal.
         EnsureSpawnersAssigned();
 
+        // Start in building phase before waves begin.
         SetPhase(buildingPhase: true);
 
         if (phaseText != null) {
             SetPhaseTextAlpha(0f);
         }
 
+        // Refresh UI at the beginning.
         UpdateUI();
     }
 
-    // Update is called once per frame
     void Update() {
         if (isGameOver) {
             return;
         }
 
+        // Check whether the player has requested the next wave.
         HasPlayerStartedWave();
+
+        // See if the current wave is complete and switch back to building phase.
         TryFinishWave();
+
+        // Keep UI updated each frame.
         UpdateUI();
     }
 
@@ -93,15 +101,18 @@ public class Crystal : MonoBehaviour {
         if (!waveStarted) {
             bool lookingAtCrystal = IsPlayerLookingAt();
 
+            // Show prompt when player looks at the crystal.
             if (lookingAtCrystal) {
                 SetTemporaryStatus($"Press {startWaveInteractKey} to start wave | Press {startWaveRemoteKey} to start remotely", 0.1f);
             }
 
+            // Remote wave start input.
             if (Input.GetKeyDown(startWaveRemoteKey)) {
                 StartNextWave();
                 return;
             }
 
+            // Direct interact input when looking at the crystal.
             if (lookingAtCrystal && Input.GetKeyDown(startWaveInteractKey)) {
                 StartNextWave();
             }
@@ -206,8 +217,7 @@ public class Crystal : MonoBehaviour {
     }
 
     void DisplayText(string message) {
-        // add a inspector assigned text mesh pro or something to display the text on the screen that will say things like, combat phase, wave started, wave ended and building phase.
-        //during the building phases the player can build and has the build camera mode. and during the combat phase the player has the combat camera mode and can attack monsters and has a health bar. the player can also see the wave number and how many monsters are left in the wave.
+        // If a message is provided, show it temporarily and optionally log it.
         if (!string.IsNullOrWhiteSpace(message)) {
             SetTemporaryStatus(message, 2f);
             if (debugLogs) {

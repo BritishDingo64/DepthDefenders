@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
+// Handles a mortar projectile that flies through the air and explodes in a splash radius.
 public class BubbleMortarProjectile : MonoBehaviour
 {
     private Vector3 startPosition;
@@ -19,6 +20,7 @@ public class BubbleMortarProjectile : MonoBehaviour
 
     public void Initialize(Vector3 spawnPoint, EnemyHealth target, Vector3 destination, float projectileDamage, float projectileSplashRadius, float projectileTravelTime, float projectileArcHeight, LayerMask hitMask, DamagePopup popupPrefab, Vector3 popupOffset)
     {
+        // Store settings and start the projectile flight.
         startPosition = spawnPoint;
         currentTarget = target;
         targetPosition = destination;
@@ -35,6 +37,7 @@ public class BubbleMortarProjectile : MonoBehaviour
 
     private void Update()
     {
+        // Animate the projectile along an arced trajectory.
         if (!initialized)
         {
             return;
@@ -76,6 +79,7 @@ public class BubbleMortarProjectile : MonoBehaviour
 
     private void Explode()
     {
+        // Damage all enemies within the explosion radius.
         List<EnemyHealth> enemies = TowerTargetingUtility.FindEnemiesInRange(targetPosition, splashRadius, targetMask);
         for (int i = 0; i < enemies.Count; i++)
         {

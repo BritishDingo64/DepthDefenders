@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Tower that launches ice projectiles to damage and slow enemies.
 public class IceTower : MonoBehaviour
 {
     [Header("Targeting")]
@@ -23,6 +24,7 @@ public class IceTower : MonoBehaviour
 
     private void Start()
     {
+        // Cache initial turret rotation for smooth aiming.
         if (turretHead != null)
         {
             initialTurretLocalEuler = turretHead.localEulerAngles;
@@ -32,6 +34,7 @@ public class IceTower : MonoBehaviour
 
     private void Update()
     {
+        // Acquire a target and fire when ready.
         EnemyHealth target = TowerTargetingUtility.FindClosestEnemy(transform.position, range, targetMask);
         if (target == null)
         {
@@ -51,6 +54,7 @@ public class IceTower : MonoBehaviour
 
     private void FireAt(EnemyHealth target)
     {
+        // Create an icicle projectile for the selected enemy.
         if (target == null || target.IsDead)
         {
             return;
@@ -94,6 +98,7 @@ public class IceTower : MonoBehaviour
 
     private void RotateTowards(Vector3 worldPosition)
     {
+        // Smoothly rotate the turret toward the target position.
         Transform targetTransform = turretHead != null ? turretHead : transform;
         Vector3 lookDirection = worldPosition - targetTransform.position;
         lookDirection.y = 0f;

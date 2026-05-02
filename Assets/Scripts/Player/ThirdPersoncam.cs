@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+// Controls the third-person camera behavior and player facing direction for basic and combat modes.
 public class ThirdPersoncam : MonoBehaviour {
     [Header("References")]
     public Transform orientation;
@@ -21,6 +22,7 @@ public class ThirdPersoncam : MonoBehaviour {
         Combat
     }
     public void Start() {
+        // Lock cursor for gameplay and initialize camera mode.
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         switchcameraStyle(CameraStyle.basic);
@@ -43,7 +45,7 @@ public class ThirdPersoncam : MonoBehaviour {
             orientation.forward = viewDir.normalized;
         }
 
-        //rotate player object
+        // Rotate player based on the current camera style.
         if (currentstyle == CameraStyle.basic) {
             float horizontalInput = Input.GetAxis("Horizontal");
             float verticalInput = Input.GetAxis("Vertical");
@@ -63,6 +65,7 @@ public class ThirdPersoncam : MonoBehaviour {
         }
     }
     private void switchcameraStyle(CameraStyle newStyle) {
+        // Enable only the selected camera style.
         CombatCam.SetActive(false);
         FreeLookCam.SetActive(false);
         CombatCam.SetActive(newStyle == CameraStyle.Combat);

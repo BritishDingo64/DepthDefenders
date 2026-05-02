@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Generates animated underwater light rays around the player and orients them toward the camera.
 public class UnderwaterLightRays : MonoBehaviour
 {
     [System.Serializable]
@@ -57,6 +58,7 @@ public class UnderwaterLightRays : MonoBehaviour
 
     private void Start()
     {
+        // Initialize references, determine the ray origin, and create ray quads.
         ResolveReferences();
         CaptureWorldOrigin();
         EnsureMaterial();
@@ -121,6 +123,7 @@ public class UnderwaterLightRays : MonoBehaviour
 
     private void OnDisable()
     {
+        // Clean up generated ray objects when the script is disabled.
         ClearRays();
     }
 
@@ -141,6 +144,7 @@ public class UnderwaterLightRays : MonoBehaviour
 
     private void CaptureWorldOrigin()
     {
+        // Determine the world space origin used for ray placement.
         if (usePlayerStartAsOrigin)
         {
             if (playerTarget == null)
@@ -160,6 +164,7 @@ public class UnderwaterLightRays : MonoBehaviour
 
     private void ResolveReferences()
     {
+        // Find the player and camera references if they are not already assigned.
         if (playerTarget == null)
         {
             GameObject taggedPlayer = GameObject.FindGameObjectWithTag("Player");
@@ -193,6 +198,7 @@ public class UnderwaterLightRays : MonoBehaviour
 
     private void BuildRays()
     {
+        // Create the specified number of near and far ray quads.
         ClearRays();
 
         int total = Mathf.Max(0, nearRayCount) + Mathf.Max(0, farRayCount);
@@ -209,6 +215,7 @@ public class UnderwaterLightRays : MonoBehaviour
 
     private RayInstance CreateRay(bool isNear, float time)
     {
+        // Create a new quad to represent a single light ray.
         GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
         go.name = isNear ? "NearLightRay" : "FarLightRay";
         go.transform.SetParent(transform, false);
@@ -249,6 +256,7 @@ public class UnderwaterLightRays : MonoBehaviour
 
     private void RelocateRay(RayInstance ray, float now)
     {
+        // Pick a new random angle and radius so the ray slowly moves around the origin.
         if (ray == null) return;
 
         ray.angle = Random.Range(0f, Mathf.PI * 2f);
@@ -262,6 +270,7 @@ public class UnderwaterLightRays : MonoBehaviour
 
     private void ClearRays()
     {
+        // Destroy or remove all generated ray objects.
         for (int i = 0; i < rays.Count; i++)
         {
             if (rays[i] != null && rays[i].transform != null)

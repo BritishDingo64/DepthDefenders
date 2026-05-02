@@ -2,6 +2,7 @@ using UnityEngine;
 
 [ExecuteAlways]
 [RequireComponent(typeof(Light))]
+// Controls the main directional light used for underwater sunlight effects.
 public class UnderwaterSunSource : MonoBehaviour
 {
     [Header("Base Underwater Sun")]
@@ -26,6 +27,7 @@ public class UnderwaterSunSource : MonoBehaviour
 
     private void Awake()
     {
+        // Cache the Light component and apply base underwater light settings.
         cachedLight = GetComponent<Light>();
         ApplyBaseSettings();
     }
@@ -38,6 +40,7 @@ public class UnderwaterSunSource : MonoBehaviour
 
     private void OnValidate()
     {
+        // Keep the light settings updated when inspector values change.
         if (cachedLight == null) cachedLight = GetComponent<Light>();
         ApplyBaseSettings();
     }
@@ -50,6 +53,7 @@ public class UnderwaterSunSource : MonoBehaviour
 
         if (animateDirection)
         {
+            // Sway the sun direction over time to simulate underwater light movement.
             float swayX = Mathf.Sin(t * directionSwaySpeed) * directionSway;
             float swayY = Mathf.Cos(t * (directionSwaySpeed * 0.73f)) * directionSway;
             transform.rotation = Quaternion.Euler(baseEuler.x + swayX, baseEuler.y + swayY, baseEuler.z);
@@ -61,6 +65,7 @@ public class UnderwaterSunSource : MonoBehaviour
 
         if (animateShimmer)
         {
+            // Modulate intensity to simulate shimmering caustic light.
             float shimmer = Mathf.Sin(t * shimmerSpeed) * 0.5f + Mathf.Sin(t * shimmerSpeed * 1.93f) * 0.5f;
             float intensityMul = 1f + shimmer * shimmerAmount;
             cachedLight.intensity = Mathf.Max(0f, baseIntensity * intensityMul);

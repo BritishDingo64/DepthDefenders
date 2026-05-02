@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Projectile used by ice towers; it seeks a target, deals damage, and applies a slow effect.
 public class IceProjectile : MonoBehaviour
 {
     private EnemyHealth target;
@@ -12,6 +13,7 @@ public class IceProjectile : MonoBehaviour
 
     public void Initialize(EnemyHealth projectileTarget, float projectileDamage, float projectileSlowMultiplier, float projectileSlowDuration, float projectileSpeed, Vector3 projectileImpactOffset)
     {
+        // Store the projectile parameters and start flying toward the target.
         target = projectileTarget;
         damage = projectileDamage;
         slowMultiplier = projectileSlowMultiplier;
@@ -23,6 +25,7 @@ public class IceProjectile : MonoBehaviour
 
     private void Update()
     {
+        // Move the projectile toward the target each frame.
         if (!initialized)
         {
             return;
@@ -52,6 +55,7 @@ public class IceProjectile : MonoBehaviour
 
     private void ApplyHit()
     {
+        // Apply damage and slow to the target when the projectile reaches it.
         if (target != null && !target.IsDead)
         {
             target.TakeDamage(damage);

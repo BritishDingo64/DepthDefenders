@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 
+// Handles player melee attacks, target selection, damage application, and feedback effects.
 public class PlayerAttack : MonoBehaviour
 {
     [Header("Attack settings")]
@@ -22,6 +23,7 @@ public class PlayerAttack : MonoBehaviour
 
     private void Start()
     {
+        // Cache the camera and animator used for attack targeting and animations.
         if (playerCamera == null)
         {
             if (Camera.main != null) playerCamera = Camera.main;
@@ -36,6 +38,7 @@ public class PlayerAttack : MonoBehaviour
 
     private void Update()
     {
+        // Fire an attack when the left mouse button is pressed and cooldown allows.
         if (Input.GetMouseButtonDown(0) && Time.time - lastAttackTime >= attackCooldown)
         {
             lastAttackTime = Time.time;
@@ -45,6 +48,7 @@ public class PlayerAttack : MonoBehaviour
 
     private void DoAttack()
     {
+        // Trigger attack animation and attempt to damage a valid enemy target.
         if (animator != null && !string.IsNullOrWhiteSpace(attackTriggerParameter))
             animator.SetTrigger(attackTriggerHash);
 
@@ -77,6 +81,7 @@ public class PlayerAttack : MonoBehaviour
 
     private EnemyHealth FindBestEnemyInFront()
     {
+        // Search for the best enemy within the attack radius in front of the player.
         Vector3 origin = transform.position + Vector3.up;
         Vector3 center = origin + transform.forward * Mathf.Max(0.1f, attackRange * 0.5f);
         Collider[] hits = Physics.OverlapSphere(center, Mathf.Max(0.1f, attackRadius), hitMask, QueryTriggerInteraction.Ignore);
@@ -110,6 +115,7 @@ public class PlayerAttack : MonoBehaviour
 
     private void SpawnDamagePopup(Vector3 worldPosition, float amount)
     {
+        // Spawn a floating damage number at the hit position.
         DamagePopup popup;
         if (damagePopupPrefab != null)
         {
@@ -136,6 +142,7 @@ public class PlayerAttack : MonoBehaviour
     // debug draw
     private void OnDrawGizmosSelected()
     {
+        // Visualize the attack reach and detection region in the editor.
         Gizmos.color = Color.yellow;
         Vector3 origin = transform.position + Vector3.up;
         Gizmos.DrawLine(origin, origin + transform.forward * attackRange);

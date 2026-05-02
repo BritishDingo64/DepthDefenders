@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// A tower that launches splash-damage mortar projectiles at nearby enemies.
 public class BubbleMortarTower : MonoBehaviour
 {
     [Header("Targeting")]
@@ -25,6 +26,7 @@ public class BubbleMortarTower : MonoBehaviour
 
     private void Start()
     {
+        // Cache the turret animator if available.
         if (turretHead != null)
         {
             animator = turretHead.GetComponent<Animator>();
@@ -33,6 +35,7 @@ public class BubbleMortarTower : MonoBehaviour
 
     private void Update()
     {
+        // Only attack when the tower has been placed.
         if (!isPlaced)
         {
             return;
@@ -59,6 +62,7 @@ public class BubbleMortarTower : MonoBehaviour
 
     private void FireAt(EnemyHealth target)
     {
+        // Spawn or reuse a projectile object and initialize its target.
         if (target == null || target.IsDead)
         {
             return;
@@ -90,6 +94,7 @@ public class BubbleMortarTower : MonoBehaviour
 
     public void PlaceTower()
     {
+        // Mark the tower as active so it can begin firing.
         isPlaced = true;
     }
 

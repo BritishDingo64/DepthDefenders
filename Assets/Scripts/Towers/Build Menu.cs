@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 
+// Handles building menu toggle, preview placement, and final tower instantiation.
 public class BuildMenu : MonoBehaviour
 {
     [Header("UI References")]
@@ -23,6 +24,7 @@ public class BuildMenu : MonoBehaviour
     
     void Start()
     {
+        // Initialize menu state and preview manager at startup.
         isMenuOpen = false;
         if (buildMenuCanvas != null)
             buildMenuCanvas.gameObject.SetActive(false);
@@ -60,7 +62,7 @@ public class BuildMenu : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha4))
             SelectBuilding(3);
         
-        // Handle building placement
+        // Handle building placement while the player is actively placing a tower.
         if (isPlacingBuilding)
         {
             UpdatePreviewPosition();
@@ -99,6 +101,7 @@ public class BuildMenu : MonoBehaviour
     
     void StartPlacement()
     {
+        // Create and show a preview object for the selected building.
         isPlacingBuilding = true;
         isMenuOpen = false;
         
@@ -129,6 +132,7 @@ public class BuildMenu : MonoBehaviour
     
     void UpdatePreviewPosition()
     {
+        // Raycast from the camera to determine the preview placement position.
         if (currentPreview == null)
             return;
         
@@ -154,7 +158,7 @@ public class BuildMenu : MonoBehaviour
     
     bool IsValidPlacement(Vector3 position)
     {
-        // Check if the position is on valid ground
+        // Check if the position is valid for placement and not overlapping other buildings.
         // You can add more complex checks here (overlapping with other buildings, etc.)
         Collider[] overlaps = Physics.OverlapSphere(position, 1f);
         
@@ -170,6 +174,7 @@ public class BuildMenu : MonoBehaviour
     
     void TryPlaceBuilding()
     {
+        // Instantiate the actual building at the preview position if placement is valid.
         if (currentPreview == null)
             return;
         
@@ -199,6 +204,7 @@ public class BuildMenu : MonoBehaviour
     
     void CancelPlacement()
     {
+        // Cancel placement mode and destroy the preview object.
         isPlacingBuilding = false;
         
         // Destroy preview
@@ -213,6 +219,7 @@ public class BuildMenu : MonoBehaviour
 
     void UpdateCursorState()
     {
+        // Lock or unlock the cursor depending on build mode state.
         bool buildingModeActive = isMenuOpen || isPlacingBuilding;
         Cursor.lockState = buildingModeActive ? CursorLockMode.None : CursorLockMode.Locked;
         Cursor.visible = buildingModeActive;

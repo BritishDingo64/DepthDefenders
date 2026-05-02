@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// Utility class for finding enemy targets around towers.
 public static class TowerTargetingUtility
 {
     public static EnemyHealth FindClosestEnemy(Vector3 origin, float range, LayerMask targetMask)
     {
+        // Return the nearest living enemy in range.
         Collider[] hits = Physics.OverlapSphere(origin, range, targetMask, QueryTriggerInteraction.Ignore);
         EnemyHealth closestEnemy = null;
         float closestDistance = float.MaxValue;
@@ -30,6 +32,7 @@ public static class TowerTargetingUtility
 
     public static List<EnemyHealth> FindEnemiesInRange(Vector3 origin, float range, LayerMask targetMask)
     {
+        // Collect all unique living enemies within the given radius.
         Collider[] hits = Physics.OverlapSphere(origin, range, targetMask, QueryTriggerInteraction.Ignore);
         List<EnemyHealth> enemies = new List<EnemyHealth>();
         HashSet<EnemyHealth> seen = new HashSet<EnemyHealth>();

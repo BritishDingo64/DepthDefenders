@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 
+// Displays floating damage text above targets and fades it out over time.
 public class DamagePopup : MonoBehaviour
 {
     [Header("References")]
@@ -16,6 +17,7 @@ public class DamagePopup : MonoBehaviour
 
     private void Awake()
     {
+        // Cache the TextMeshPro component if not already assigned.
         if (text == null)
         {
             text = GetComponentInChildren<TMP_Text>();
@@ -29,6 +31,7 @@ public class DamagePopup : MonoBehaviour
 
     public void Initialize(string value)
     {
+        // Set the displayed damage value.
         if (text != null)
         {
             text.text = value;
@@ -39,15 +42,17 @@ public class DamagePopup : MonoBehaviour
     {
         age += Time.deltaTime;
 
+        // Float the popup upward.
         transform.position += Vector3.up * (floatSpeed * Time.deltaTime);
 
-        // Face camera if available so world-space text remains readable.
+        // Rotate the popup to face the camera so it stays readable.
         if (Camera.main != null)
         {
             Vector3 forward = Camera.main.transform.forward;
             transform.rotation = Quaternion.LookRotation(forward, Vector3.up);
         }
 
+        // Fade out after fadeStartAt seconds.
         if (text != null && age >= fadeStartAt)
         {
             float t = Mathf.InverseLerp(fadeStartAt, Mathf.Max(fadeStartAt + 0.01f, lifetime), age);
@@ -56,6 +61,7 @@ public class DamagePopup : MonoBehaviour
             text.color = c;
         }
 
+        // Destroy the popup once its lifetime has ended.
         if (age >= lifetime)
         {
             Destroy(gameObject);
