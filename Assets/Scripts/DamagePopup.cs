@@ -31,7 +31,7 @@ public class DamagePopup : MonoBehaviour
 
     public void Initialize(string value)
     {
-        // Set the displayed damage value.
+        // Initialize the popup text. `value` is the string shown (for example a damage number).
         if (text != null)
         {
             text.text = value;

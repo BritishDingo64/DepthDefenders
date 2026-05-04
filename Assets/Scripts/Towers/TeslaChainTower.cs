@@ -40,7 +40,9 @@ public class TeslaChainTower : MonoBehaviour
 
     private void FireChain(EnemyHealth firstTarget)
     {
-        // Apply damage to the first target and chain to adjacent enemies.
+        // Apply damage to the first target and chain to nearby enemies.
+        // The algorithm walks from the first target and repeatedly finds the next
+        // closest eligible enemy within `chainRange` until `maxChains` is reached.
         List<EnemyHealth> chainedTargets = new List<EnemyHealth>();
         EnemyHealth currentTarget = firstTarget;
         
@@ -65,7 +67,8 @@ public class TeslaChainTower : MonoBehaviour
 
     private EnemyHealth FindNextChainTarget(EnemyHealth fromTarget, List<EnemyHealth> excludedTargets)
     {
-        // Find the next closest enemy eligible for chaining.
+        // Find the next closest enemy eligible for chaining. This excludes already
+        // hit targets (to avoid immediate loops) and ignores dead enemies.
         List<EnemyHealth> nearbyTargets = TowerTargetingUtility.FindEnemiesInRange(fromTarget.transform.position, chainRange, targetMask);
         EnemyHealth closestTarget = null;
         float closestDistance = float.MaxValue;

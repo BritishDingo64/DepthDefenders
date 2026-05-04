@@ -139,10 +139,9 @@ public class PlayerAttack : MonoBehaviour
         popup.Initialize(Mathf.RoundToInt(amount).ToString());
     }
 
-    // debug draw
+    // Editor-only gizmos: visualize attack reach and detection region for tuning in the scene view.
     private void OnDrawGizmosSelected()
     {
-        // Visualize the attack reach and detection region in the editor.
         Gizmos.color = Color.yellow;
         Vector3 origin = transform.position + Vector3.up;
         Gizmos.DrawLine(origin, origin + transform.forward * attackRange);

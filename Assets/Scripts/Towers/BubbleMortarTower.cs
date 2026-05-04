@@ -62,7 +62,8 @@ public class BubbleMortarTower : MonoBehaviour
 
     private void FireAt(EnemyHealth target)
     {
-        // Spawn or reuse a projectile object and initialize its target.
+        // Spawn or reuse a projectile visual object and initialize its behavior.
+        // The `BubbleMortarProjectile` handles arced travel, retargeting, and splash damage.
         if (target == null || target.IsDead)
         {
             return;
@@ -94,7 +95,8 @@ public class BubbleMortarTower : MonoBehaviour
 
     public void PlaceTower()
     {
-        // Mark the tower as active so it can begin firing.
+        // Mark the tower as placed and active. This switches the tower into its
+        // runtime behaviour so `Update` will search for targets and fire.
         isPlaced = true;
     }
 

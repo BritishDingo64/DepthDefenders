@@ -54,7 +54,8 @@ public class IceTower : MonoBehaviour
 
     private void FireAt(EnemyHealth target)
     {
-        // Create an icicle projectile for the selected enemy.
+        // Create an icicle projectile for the selected enemy. If no prefab exists,
+        // apply immediate hit effects as a fallback so the tower still deals damage.
         if (target == null || target.IsDead)
         {
             return;
@@ -108,6 +109,9 @@ public class IceTower : MonoBehaviour
             return;
         }
 
+        // If we're rotating a turret head mounted on a parent, convert the world look
+        // direction into the turret's local yaw and slerp the local rotation for
+        // smoother constrained tracking behavior.
         if (targetTransform == turretHead && hasInitialTurretLocalEuler)
         {
             Transform parent = turretHead.parent;

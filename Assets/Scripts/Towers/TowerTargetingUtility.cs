@@ -6,7 +6,9 @@ public static class TowerTargetingUtility
 {
     public static EnemyHealth FindClosestEnemy(Vector3 origin, float range, LayerMask targetMask)
     {
-        // Return the nearest living enemy in range.
+        // Return the nearest living enemy in range. Uses `Physics.OverlapSphere` to fetch
+        // colliders within the radius and resolves to the parent `EnemyHealth` component.
+        // `QueryTriggerInteraction.Ignore` avoids picking up trigger volumes as targets.
         Collider[] hits = Physics.OverlapSphere(origin, range, targetMask, QueryTriggerInteraction.Ignore);
         EnemyHealth closestEnemy = null;
         float closestDistance = float.MaxValue;
@@ -32,7 +34,8 @@ public static class TowerTargetingUtility
 
     public static List<EnemyHealth> FindEnemiesInRange(Vector3 origin, float range, LayerMask targetMask)
     {
-        // Collect all unique living enemies within the given radius.
+        // Collect all unique living enemies within the given radius. De-duplicates using
+        // a HashSet to avoid multiple colliders on the same enemy producing duplicates.
         Collider[] hits = Physics.OverlapSphere(origin, range, targetMask, QueryTriggerInteraction.Ignore);
         List<EnemyHealth> enemies = new List<EnemyHealth>();
         HashSet<EnemyHealth> seen = new HashSet<EnemyHealth>();

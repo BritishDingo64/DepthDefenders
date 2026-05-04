@@ -269,14 +269,12 @@ public class BuildingPreviewManager : MonoBehaviour
     
     public void ShowPreviews()
     {
-        // Previews are always visible since you control them in the scene
-        // This method is kept for compatibility with BuildMenu
+        // No-op preserved for API compatibility. Previews are managed by the scene container and cameras.
     }
     
     public void HidePreviews()
     {
-        // Previews are always visible since you control them in the scene
-        // This method is kept for compatibility with BuildMenu
+        // No-op preserved for API compatibility. Previews are managed by the scene container and cameras.
     }
 }
 
@@ -289,3 +287,6 @@ public class Spinner : MonoBehaviour
         transform.Rotate(0, rotationSpeed * Time.deltaTime, 0);
     }
 }
+
+// `Spinner` is a tiny utility used by the preview system to rotate preview anchors.
+// It is intentionally minimal and only used for cosmetic rotation of preview models.

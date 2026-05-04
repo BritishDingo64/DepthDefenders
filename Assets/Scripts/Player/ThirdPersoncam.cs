@@ -21,6 +21,7 @@ public class ThirdPersoncam : MonoBehaviour {
         basic,
         Combat
     }
+    // Camera control modes: `basic` = free-look player-facing controls, `Combat` = lock to combat target direction.
     public void Start() {
         // Lock cursor for gameplay and initialize camera mode.
         Cursor.lockState = CursorLockMode.Locked;

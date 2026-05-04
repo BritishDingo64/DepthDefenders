@@ -32,8 +32,8 @@ public class HealthBarUI : MonoBehaviour
         {
             return;
         }
-
-        // Subscribe to player health events so UI updates automatically.
+        // Subscribe to player health events so the UI updates automatically when
+        // the player's health changes, is damaged, healed, or when they die.
         targetHealth.onDamaged.AddListener(UpdateBar);
         targetHealth.onHealed.AddListener(UpdateBar);
         targetHealth.onDied.AddListener(UpdateBar);

@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-// Handles building menu toggle, preview placement, and final tower instantiation.
+// Handles the build menu UI: open/close, placement preview, and final tower instantiation.
 public class BuildMenu : MonoBehaviour
 {
     [Header("UI References")]
@@ -132,7 +132,8 @@ public class BuildMenu : MonoBehaviour
     
     void UpdatePreviewPosition()
     {
-        // Raycast from the camera to determine the preview placement position.
+        // Raycast from the camera to determine the preview placement position on `groundLayer`.
+        // Also updates preview materials to indicate valid/invalid placement.
         if (currentPreview == null)
             return;
         

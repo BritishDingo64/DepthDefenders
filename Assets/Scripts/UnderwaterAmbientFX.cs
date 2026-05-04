@@ -132,7 +132,9 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
     private void EnsureMotes()
     {
-        // Create or configure the underwater mote particle system.
+        // Create or configure the underwater mote particle system. This method builds a
+        // ParticleSystem with controlled lifetime, size, color, noise and velocity to
+        // provide subtle floating particles visible in the underwater environment.
         if (!spawnMotes)
         {
             if (motes != null)
@@ -248,7 +250,8 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
     private void EnsureParticleMaterial(ParticleSystemRenderer renderer)
     {
-        // Make sure the particle renderer has a usable material for the underwater motes.
+        // Ensure the particle renderer has a usable material. We try a chain of commonly
+        // available particle/unlit shaders so the motes will render across SRP/legacy projects.
         if (renderer == null) return;
 
         if (particleMaterial != null)

@@ -8,8 +8,8 @@ public class TeslaZapEffect : MonoBehaviour
 
     private void Awake()
     {
-        // Create the lightning line renderer and configure a glowing material.
-        // Create LineRenderer
+        // Create the LineRenderer and a lightweight emissive material used for the zap effect.
+        // Material is configured for additive/alpha blending so the lightning appears glow-like.
         lineRenderer = gameObject.AddComponent<LineRenderer>();
         lineRenderer.widthMultiplier = 0.1f;
         lineRenderer.useWorldSpace = true;

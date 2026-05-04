@@ -66,6 +66,8 @@ public class BubbleMortarProjectile : MonoBehaviour
 
     private void Retarget()
     {
+        // If the original target is gone, try to find a new nearby enemy within a reasonable radius
+        // (scaled from the splash radius) so the mortar still has meaningful impact.
         float retargetRadius = Mathf.Max(splashRadius * 2f, 4f);
         EnemyHealth newTarget = TowerTargetingUtility.FindClosestEnemy(transform.position, retargetRadius, targetMask);
         if (newTarget == null)

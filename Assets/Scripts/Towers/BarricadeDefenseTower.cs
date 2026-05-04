@@ -6,6 +6,8 @@ using UnityEngine.Events;
 // Represents a destructible barricade that enemies can attack and which can draw aggro.
 public class BarricadeDefenseTower : MonoBehaviour
 {
+    // Global registry of active barricades used by enemy AI to find nearby barricades.
+    // Entries are added/removed in OnEnable/OnDisable so other systems can query them.
     public static readonly List<BarricadeDefenseTower> ActiveBarricades = new List<BarricadeDefenseTower>();
 
     [System.Serializable]

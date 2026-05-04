@@ -129,6 +129,9 @@ public class Crystal : MonoBehaviour {
             }
         }
 
+        // Raycast from the player's orientation forward to determine if the player is looking
+        // at the crystal (within `interactDistance`). This allows interaction prompts only
+        // when the player is intentionally looking at the crystal object or one of its children.
         Ray raycast = new Ray(orientation.transform.position, orientation.transform.forward);
         if (!Physics.Raycast(raycast.origin, raycast.direction, out RaycastHit hitInfo, interactDistance)) {
             return false;
@@ -143,6 +146,7 @@ public class Crystal : MonoBehaviour {
         waveStarted = true;
         waveNumber++;
         SetPhase(buildingPhase: false);
+        // Transition from building into combat for the new wave and notify the UI/logs.
         DisplayText($"Combat phase - wave {waveNumber} started");
     }
 
@@ -160,6 +164,8 @@ public class Crystal : MonoBehaviour {
             }
         }
 
+        // If all spawners have finished issuing their enemies and no active enemies remain,
+        // end the combat phase and return to building mode.
         if (!anySpawnerStillPendingOrActive && Spawner.ActiveEnemyCount <= 0) {
             waveStarted = false;
             SetPhase(buildingPhase: true);
@@ -181,6 +187,7 @@ public class Crystal : MonoBehaviour {
             }
         }
 
+        // Ensure each spawner knows which crystal GameObject to reference for wave control.
         for (int i = 0; i < spawners.Count; i++) {
             if (spawners[i] != null && spawners[i].crystal == null) {
                 spawners[i].crystal = gameObject;
@@ -250,6 +257,7 @@ public class Crystal : MonoBehaviour {
             crystalHealthText.text = $"Crystal HP: {Mathf.CeilToInt(currentHealth)} / {Mathf.CeilToInt(maxHealth)}";
         }
 
+        // Update the status text to show temporary messages (prompts) or the default instruction.
         if (statusText != null) {
             if (!string.IsNullOrWhiteSpace(temporaryStatusMessage) && Time.time <= temporaryStatusUntil) {
                 statusText.text = temporaryStatusMessage;

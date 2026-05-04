@@ -58,7 +58,9 @@ public class UnderwaterLightRays : MonoBehaviour
 
     private void Start()
     {
-        // Initialize references, determine the ray origin, and create ray quads.
+        // Initialize references, determine the ray origin, create ray quads, and bind a runtime
+        // material. The rays are simple quads with a MaterialPropertyBlock so each instance
+        // can update color/alpha without creating many material copies.
         ResolveReferences();
         CaptureWorldOrigin();
         EnsureMaterial();
@@ -188,6 +190,8 @@ public class UnderwaterLightRays : MonoBehaviour
         if (rayMaterial != null)
             return;
 
+        // Try to find a custom shader; if present, create a single shared runtime material.
+        // Using a single material and per-renderer property blocks keeps drawcalls reasonable.
         Shader s = Shader.Find("Custom/UnderwaterLightRay");
         if (s != null)
         {
@@ -215,7 +219,8 @@ public class UnderwaterLightRays : MonoBehaviour
 
     private RayInstance CreateRay(bool isNear, float time)
     {
-        // Create a new quad to represent a single light ray.
+        // Create a new quad to represent a single light ray. The quad is configured to
+        // not cast or receive shadows and to be excluded from probes to keep it cheap.
         GameObject go = GameObject.CreatePrimitive(PrimitiveType.Quad);
         go.name = isNear ? "NearLightRay" : "FarLightRay";
         go.transform.SetParent(transform, false);

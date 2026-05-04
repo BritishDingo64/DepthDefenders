@@ -169,7 +169,9 @@ public class PlayerHealth : MonoBehaviour
 
     private void EnsureRespawnCountdownText()
     {
-        // Ensure a UI text element exists to show the respawn timer.
+        // Ensure a UI text element exists to show the respawn timer. If none is
+        // assigned we try to synthesize a TextMeshProUGUI under an existing canvas
+        // so the player receives visual feedback during the respawn countdown.
         if (respawnCountdownText != null)
         {
             respawnCountdownText.gameObject.SetActive(false);
@@ -218,7 +220,9 @@ public class PlayerHealth : MonoBehaviour
 
     private void SetRagdollActive(bool active)
     {
-        // Toggle ragdoll mode on or off by enabling/disabling bones and animator.
+        // Toggle ragdoll mode by enabling/disabling animated bones and physics bodies.
+        // When enabling ragdoll we restore physics on child rigidbodies; when disabling we kinematize them
+        // and restore animator/character controller. Velocities are cleared to avoid physics glitches.
         if (ragdollActive == active)
             return;
 
