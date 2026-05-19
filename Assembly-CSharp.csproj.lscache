@@ -54,19 +54,20 @@ Assets/
  ModularFirstPersonController/FirstPersonController/FirstPersonController.cs
  Scripts/
   Crystal.cs
+  Currency.cs
   DamagePopup.cs
   Enemies/
    EnemyHealth.cs
    Monster.cs
    MonsterAndType.cs
    Spawner.cs
-  HealthBarUI.cs
+   Wave.cs
   Player/
+   HealthBarUI.cs
    Movement.cs
    PlayerAttack.cs
    PlayerHealth.cs
    ThirdPersoncam.cs
-  SpinModel.cs
   Towers/
    BarricadeDefenseTower.cs
    BubbleMortarProjectile.cs
@@ -75,13 +76,13 @@ Assets/
    BuildingPreviewManager.cs
    IceProjectile.cs
    IceTower.cs
+   SpinModel.cs
    TeslaChainTower.cs
    TeslaZapEffect.cs
    TowerTargetingUtility.cs
   UnderwaterAmbientFX.cs
   UnderwaterLightRays.cs
   UnderwaterSunSource.cs
-  Wave.cs
  TextMesh Pro/Examples & Extras/Scripts/
   Benchmark01.cs
   Benchmark01_UGUI.cs
@@ -454,7 +455,7 @@ Library/ScriptAssemblies/
  Unity.Properties.SourceGenerator.dll
  Unity.SourceGenerators.dll
  Unity.UIToolkit.SourceGenerator.dll
-../../Users/554747/.vscode/extensions/visualstudiotoolsforunity.vstuc-1.2.1/Analyzers/Microsoft.Unity.Analyzers.dll
+../../Users/554747/.vscode/extensions/visualstudiotoolsforunity.vstuc-1.2.2/Analyzers/Microsoft.Unity.Analyzers.dll
 
 [analyzerConfigFiles]
 .editorconfig

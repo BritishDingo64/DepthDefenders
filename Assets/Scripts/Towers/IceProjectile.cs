@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 // Projectile used by ice towers; it seeks a target, deals damage, and applies a slow effect.
@@ -10,8 +11,10 @@ public class IceProjectile : MonoBehaviour
     private float speed;
     private Vector3 impactOffset;
     private bool initialized;
+    private DamagePopup damagePopupPrefab;
+    private Vector3 damagePopupOffset;
 
-    public void Initialize(EnemyHealth projectileTarget, float projectileDamage, float projectileSlowMultiplier, float projectileSlowDuration, float projectileSpeed, Vector3 projectileImpactOffset)
+    public void Initialize(EnemyHealth projectileTarget, float projectileDamage, float projectileSlowMultiplier, float projectileSlowDuration, float projectileSpeed, Vector3 projectileImpactOffset, DamagePopup popupPrefab = null, Vector3 popupOffset = default)
     {
         // Store the projectile parameters and start flying toward the target.
         target = projectileTarget;
@@ -21,6 +24,8 @@ public class IceProjectile : MonoBehaviour
         speed = Mathf.Max(0.01f, projectileSpeed);
         impactOffset = projectileImpactOffset;
         initialized = true;
+        damagePopupPrefab = popupPrefab;
+        damagePopupOffset = popupOffset == default ? new Vector3(0f, 1f, 0f) : popupOffset;
     }
 
     private void Update()
@@ -60,6 +65,8 @@ public class IceProjectile : MonoBehaviour
         {
             target.TakeDamage(damage);
 
+            SpawnDamagePopup(target.transform.position, damage);
+
             Monster monster = target.GetComponent<Monster>();
             if (monster != null)
             {
@@ -68,5 +75,32 @@ public class IceProjectile : MonoBehaviour
         }
 
         Destroy(gameObject);
+    }
+
+    private void SpawnDamagePopup(Vector3 worldPosition, float amount)
+    {
+        DamagePopup popup = null;
+        Vector3 popupPosition = worldPosition + damagePopupOffset;
+
+        if (damagePopupPrefab != null)
+        {
+            popup = Instantiate(damagePopupPrefab, popupPosition, Quaternion.identity);
+        }
+        else
+        {
+            GameObject popupObject = new GameObject("DamagePopup");
+            popupObject.transform.position = popupPosition;
+
+            TextMeshPro tmp = popupObject.AddComponent<TextMeshPro>();
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.fontSize = 4f;
+            tmp.color = new Color(1f, 0.25f, 0.25f, 1f);
+
+            popup = popupObject.AddComponent<DamagePopup>();
+            popup.text = tmp;
+        }
+
+        if (popup != null)
+            popup.Initialize(Mathf.RoundToInt(amount).ToString());
     }
 }

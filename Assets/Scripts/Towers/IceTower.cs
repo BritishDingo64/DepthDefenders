@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 // Tower that launches ice projectiles to damage and slow enemies.
@@ -17,6 +18,8 @@ public class IceTower : MonoBehaviour
     [SerializeField] private GameObject iciclePrefab;
     [SerializeField] private float icicleSpeed = 20f;
     [SerializeField] private Vector3 impactOffset = new Vector3(0f, 0.8f, 0f);
+    [SerializeField] private DamagePopup damagePopupPrefab;
+    [SerializeField] private Vector3 damagePopupOffset = new Vector3(0f, 1.2f, 0f);
 
     private float nextShotTime;
     private Vector3 initialTurretLocalEuler;
@@ -78,7 +81,7 @@ public class IceTower : MonoBehaviour
             projectile = icicleInstance.AddComponent<IceProjectile>();
         }
 
-        projectile.Initialize(target, damage, slowMultiplier, slowDuration, icicleSpeed, impactOffset);
+        projectile.Initialize(target, damage, slowMultiplier, slowDuration, icicleSpeed, impactOffset, damagePopupPrefab, damagePopupOffset);
     }
 
     private void ApplyHitEffects(EnemyHealth target)
@@ -90,11 +93,40 @@ public class IceTower : MonoBehaviour
 
         target.TakeDamage(damage);
 
+        SpawnDamagePopup(target.transform.position, damage);
+
         Monster monster = target.GetComponent<Monster>();
         if (monster != null)
         {
             monster.ApplySlow(slowMultiplier, slowDuration);
         }
+    }
+
+    private void SpawnDamagePopup(Vector3 worldPosition, float amount)
+    {
+        DamagePopup popup = null;
+        Vector3 popupPosition = worldPosition + damagePopupOffset;
+
+        if (damagePopupPrefab != null)
+        {
+            popup = Instantiate(damagePopupPrefab, popupPosition, Quaternion.identity);
+        }
+        else
+        {
+            GameObject popupObject = new GameObject("DamagePopup");
+            popupObject.transform.position = popupPosition;
+
+            TextMeshPro tmp = popupObject.AddComponent<TextMeshPro>();
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.fontSize = 4f;
+            tmp.color = new Color(1f, 0.25f, 0.25f, 1f);
+
+            popup = popupObject.AddComponent<DamagePopup>();
+            popup.text = tmp;
+        }
+
+        if (popup != null)
+            popup.Initialize(Mathf.RoundToInt(amount).ToString());
     }
 
     private void RotateTowards(Vector3 worldPosition)

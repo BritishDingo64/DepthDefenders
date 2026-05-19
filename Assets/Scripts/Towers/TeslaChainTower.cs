@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 // Tower that zaps a primary enemy and chains lightning to nearby enemies.
@@ -15,6 +16,8 @@ public class TeslaChainTower : MonoBehaviour
     [SerializeField] private float chainRange = 4f;
     [SerializeField] private int maxChains = 3;
     [SerializeField] private GameObject zapEffectPrefab;
+    [SerializeField] private DamagePopup damagePopupPrefab;
+    [SerializeField] private Vector3 damagePopupOffset = new Vector3(0f, 1.5f, 0f);
 
     private float nextAttackTime;
 
@@ -54,6 +57,7 @@ public class TeslaChainTower : MonoBehaviour
             if (!chainedTargets.Contains(currentTarget) && !currentTarget.IsDead)
             {
                 currentTarget.TakeDamage(damage);
+                SpawnDamagePopup(currentTarget.transform.position, damage);
                 chainedTargets.Add(currentTarget);
                 
                 // Spawn zap effect
@@ -63,6 +67,33 @@ public class TeslaChainTower : MonoBehaviour
 
             currentTarget = FindNextChainTarget(currentTarget, chainedTargets);
         }
+    }
+
+    private void SpawnDamagePopup(Vector3 worldPosition, float amount)
+    {
+        DamagePopup popup = null;
+        Vector3 popupPosition = worldPosition + damagePopupOffset;
+
+        if (damagePopupPrefab != null)
+        {
+            popup = Instantiate(damagePopupPrefab, popupPosition, Quaternion.identity);
+        }
+        else
+        {
+            GameObject popupObject = new GameObject("DamagePopup");
+            popupObject.transform.position = popupPosition;
+
+            TextMeshPro tmp = popupObject.AddComponent<TextMeshPro>();
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.fontSize = 4f;
+            tmp.color = new Color(1f, 0.25f, 0.25f, 1f);
+
+            popup = popupObject.AddComponent<DamagePopup>();
+            popup.text = tmp;
+        }
+
+        if (popup != null)
+            popup.Initialize(Mathf.RoundToInt(amount).ToString());
     }
 
     private EnemyHealth FindNextChainTarget(EnemyHealth fromTarget, List<EnemyHealth> excludedTargets)

@@ -12,6 +12,7 @@ public class EnemyHealth : MonoBehaviour
     [Min(1f)] public float maxHealth = 100f;
     [Min(0f)] public float currentHealth;
     [SerializeField] private bool canTakeDamage = true;
+    [SerializeField, Min(0)] private int moneyRewardOnDeath = 10;
     [SerializeField] private bool destroyOnDeath = true;
     [SerializeField] private float destroyDelay = 0f;
     [SerializeField] private bool disableCollidersOnDeath = true;
@@ -23,6 +24,9 @@ public class EnemyHealth : MonoBehaviour
     public HealthValueEvent onHealthChanged;
 
     public bool IsDead => currentHealth <= 0f;
+    public int MoneyRewardOnDeath => moneyRewardOnDeath;
+
+    bool hasGrantedDeathReward;
 
     private void Awake()
     {
@@ -72,8 +76,16 @@ public class EnemyHealth : MonoBehaviour
         onHealthChanged?.Invoke(currentHealth / maxHealth);
     }
 
+    private void OnDestroy()
+    {
+        if (!Application.isPlaying) return;
+        TryGrantDeathReward();
+    }
+
     private void Die()
     {
+        TryGrantDeathReward();
+
         // Disable colliders and optionally destroy the enemy object.
         if (disableCollidersOnDeath)
         {
@@ -97,5 +109,14 @@ public class EnemyHealth : MonoBehaviour
                 Destroy(gameObject);
             }
         }
+    }
+
+    void TryGrantDeathReward()
+    {
+        if (hasGrantedDeathReward) return;
+        if (moneyRewardOnDeath <= 0) return;
+
+        hasGrantedDeathReward = true;
+        Currency.TryAddMoney(moneyRewardOnDeath);
     }
 }

@@ -9,6 +9,14 @@ public class BuildMenu : MonoBehaviour
     
     [Header("Building Prefabs")]
     public GameObject[] buildingPrefabs; // Array of 4 building prefabs
+
+    [Header("Building Costs")]
+    [SerializeField, Min(0)] int defaultBuildingCost = 50;
+    [SerializeField] int[] buildingCosts = new int[] { 50, 75, 100, 125 };
+    [SerializeField, Min(1f)] float costIncreaseMultiplier = 1.1f;
+
+    [Header("Cost UI (optional)")]
+    [SerializeField] TMP_Text[] buildingCostTexts;
     
     [Header("Preview Settings")]
     public Material validPlacementMaterial; // Green material
@@ -21,6 +29,7 @@ public class BuildMenu : MonoBehaviour
     private GameObject currentPreview;
     private int selectedBuildingIndex = -1;
     private Renderer[] previewRenderers;
+    private int[] runtimeBuildingCosts;
     
     void Start()
     {
@@ -29,6 +38,9 @@ public class BuildMenu : MonoBehaviour
         if (buildMenuCanvas != null)
             buildMenuCanvas.gameObject.SetActive(false);
         UpdateCursorState();
+
+        InitializeRuntimeBuildingCosts();
+        RefreshBuildingCostTexts();
 
         // Setup preview manager
         if (previewManager != null)
@@ -94,6 +106,13 @@ public class BuildMenu : MonoBehaviour
     {
         if (buildingIndex < 0 || buildingIndex >= buildingPrefabs.Length)
             return;
+
+        int selectedBuildingCost = GetBuildingCost(buildingIndex);
+        if (!CanAfford(selectedBuildingCost))
+        {
+            Debug.Log($"Not enough money to place this building. Cost: {selectedBuildingCost}");
+            return;
+        }
         
         selectedBuildingIndex = buildingIndex;
         StartPlacement();
@@ -186,6 +205,13 @@ public class BuildMenu : MonoBehaviour
         {
             if (IsValidPlacement(hit.point))
             {
+                int selectedBuildingCost = GetBuildingCost(selectedBuildingIndex);
+                if (!Currency.TrySpend(selectedBuildingCost))
+                {
+                    Debug.Log($"Not enough money to place this building. Cost: {selectedBuildingCost}");
+                    return;
+                }
+
                 // Place the actual building
                 GameObject building = Instantiate(buildingPrefabs[selectedBuildingIndex], hit.point, currentPreview.transform.rotation);
                 
@@ -195,12 +221,82 @@ public class BuildMenu : MonoBehaviour
                 {
                     tower.PlaceTower();
                 }
+
+                IncreaseBuildingCost(selectedBuildingIndex);
+                RefreshBuildingCostTexts();
                 
                 // Clean up and return to menu
                 CancelPlacement();
                 ToggleMenu(); // Reopen menu after placing
             }
         }
+    }
+
+    int GetBuildingCost(int buildingIndex)
+    {
+        if (runtimeBuildingCosts != null && buildingIndex >= 0 && buildingIndex < runtimeBuildingCosts.Length)
+        {
+            return Mathf.Max(0, runtimeBuildingCosts[buildingIndex]);
+        }
+
+        return Mathf.Max(0, defaultBuildingCost);
+    }
+
+    void InitializeRuntimeBuildingCosts()
+    {
+        int buildingCount = buildingPrefabs == null ? 0 : buildingPrefabs.Length;
+        runtimeBuildingCosts = new int[buildingCount];
+
+        for (int i = 0; i < buildingCount; i++)
+        {
+            int configuredCost = defaultBuildingCost;
+            if (buildingCosts != null && i < buildingCosts.Length)
+            {
+                configuredCost = buildingCosts[i];
+            }
+
+            runtimeBuildingCosts[i] = Mathf.Max(0, configuredCost);
+        }
+    }
+
+    void IncreaseBuildingCost(int buildingIndex)
+    {
+        if (runtimeBuildingCosts == null || buildingIndex < 0 || buildingIndex >= runtimeBuildingCosts.Length)
+            return;
+
+        float multiplier = Mathf.Max(1f, costIncreaseMultiplier);
+        int currentCost = Mathf.Max(0, runtimeBuildingCosts[buildingIndex]);
+        int increasedCost = Mathf.CeilToInt(currentCost * multiplier);
+        runtimeBuildingCosts[buildingIndex] = Mathf.Max(currentCost, increasedCost);
+    }
+
+    void RefreshBuildingCostTexts()
+    {
+        if (buildingCostTexts == null || runtimeBuildingCosts == null)
+            return;
+
+        int count = Mathf.Min(buildingCostTexts.Length, runtimeBuildingCosts.Length);
+        for (int i = 0; i < count; i++)
+        {
+            if (buildingCostTexts[i] == null)
+                continue;
+
+            buildingCostTexts[i].text = $"Cost: {runtimeBuildingCosts[i]}";
+        }
+    }
+
+    bool CanAfford(int cost)
+    {
+        if (cost <= 0) return true;
+
+        int currentMoney;
+        if (!Currency.TryGetCurrentMoney(out currentMoney))
+        {
+            Debug.LogWarning("No Currency component found in the scene. Cannot buy buildings.");
+            return false;
+        }
+
+        return currentMoney >= cost;
     }
     
     void CancelPlacement()

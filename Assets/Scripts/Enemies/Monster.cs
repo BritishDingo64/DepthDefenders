@@ -18,6 +18,7 @@ public class Monster : MonoBehaviour {
     float attackRange = 1.5f;
     [SerializeField]
     float damagePerAttack = 10f;
+    float baseDamagePerAttack;
     [SerializeField]
     float detectionRange = 7f;
     [SerializeField]
@@ -81,6 +82,7 @@ public class Monster : MonoBehaviour {
     void Awake() {
         // Initialize components and links for enemy behavior.
         enemyHealth = GetComponent<EnemyHealth>();
+        baseDamagePerAttack = damagePerAttack;
         if (enemyHealth != null) {
             enemyHealth.onDamaged.AddListener(HandleDamaged);
         }
@@ -101,6 +103,12 @@ public class Monster : MonoBehaviour {
             navMeshAgent.updateRotation = false;
             navMeshAgent.avoidancePriority = Random.Range(30, 70);
         }
+    }
+
+    public void MultiplyDamage(float multiplier)
+    {
+        if (multiplier <= 0f) return;
+        damagePerAttack = baseDamagePerAttack * multiplier;
     }
 
     void OnDestroy() {

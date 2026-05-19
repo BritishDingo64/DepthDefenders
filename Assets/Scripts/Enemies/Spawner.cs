@@ -14,6 +14,29 @@ public class Spawner : MonoBehaviour {
     Color arrowColour;
     [SerializeField]
     List<Wave> waves;
+
+    [Header("Scaling Settings")]
+    [Tooltip("Percent increase in enemy counts per wave (0.08 = 8% per wave)")]
+    [SerializeField]
+    float enemyIncreasePercentPerWave = 0.08f;
+
+    [Tooltip("Color used when stat scaling starts (tintFactor approaching 0)")]
+    [SerializeField]
+    Color tintDark = new Color(0.5f, 0.05f, 0.05f);
+
+    [Tooltip("Color used at maximum stat scaling (tintFactor == 1)")]
+    [SerializeField]
+    Color tintBright = new Color(1f, 0.05f, 0.05f);
+
+    [Header("Stat Multipliers")]
+    [Tooltip("Maximum multiplier applied to enemy health at highest waves")]
+    [SerializeField]
+    float maxHealthMultiplier = 2.5f;
+
+    [Tooltip("Maximum multiplier applied to enemy damage at highest waves")]
+    [SerializeField]
+    float maxDamageMultiplier = 2.5f;
+
     [SerializeField]
     float timeBetweenSpawns = 0.35f;
     [SerializeField]
@@ -43,11 +66,12 @@ public class Spawner : MonoBehaviour {
 
     bool CanStartWave() {
         // Only start a spawn coroutine when a new wave has been triggered by the crystal.
-        return !isSpawningWave && crystalComponent != null && crystalComponent.waveStarted && crystalComponent.waveNumber > 0 && crystalComponent.waveNumber <= waves.Count && crystalComponent.waveNumber != lastStartedWave;
+        return !isSpawningWave && crystalComponent != null && crystalComponent.waveStarted && crystalComponent.waveNumber > 0 && crystalComponent.waveNumber != lastStartedWave && (waves != null && waves.Count > 0);
     }
 
     public bool HasWaveConfigured(int waveNumber) {
-        return waveNumber > 0 && waveNumber <= TotalWaves;
+        // We allow infinite waves by treating the last configured wave as a template
+        return waveNumber > 0 && TotalWaves > 0;
     }
 
     public bool HasPendingOrActiveWave(int waveNumber) {
@@ -59,13 +83,20 @@ public class Spawner : MonoBehaviour {
         // Spawn enemies across subwaves for the current wave.
         isSpawningWave = true;
         int waveNumber = crystalComponent.waveNumber;
-        Wave currentWave = waves[waveNumber - 1];
+        // Use last defined wave as template when waveNumber exceeds configured waves
+        int templateIndex = Mathf.Clamp(waveNumber, 1, waves.Count) - 1;
+        Wave currentWave = waves[templateIndex];
         int subWaveCount = Mathf.Max(1, currentWave.numberOfSubWaves);
         Dictionary<MonsterAndType, int> remainingCounts = new();
 
+        // Support infinite waves: when waveNumber exceeds configured waves, use the last configured wave
+        // as a template and scale counts by waveMultiplier so enemy numbers grow each wave.
+        float waveMultiplier = 1f + Mathf.Max(0, waveNumber - 1) * enemyIncreasePercentPerWave;
+
         foreach (MonsterAndType monsterType in currentWave.monsters) {
             if (monsterType == null) continue;
-            remainingCounts[monsterType] = Mathf.Max(0, monsterType.count);
+            int baseCount = Mathf.Max(0, monsterType.count);
+            remainingCounts[monsterType] = Mathf.CeilToInt(baseCount * waveMultiplier);
         }
 
         for (int subWaveIndex = 0; subWaveIndex < subWaveCount; subWaveIndex++) {
@@ -77,7 +108,7 @@ public class Spawner : MonoBehaviour {
                 int spawnCountThisSubWave = Mathf.CeilToInt((float)remainingCounts[monsterType] / remainingSubWaves);
 
                 for (int spawnIndex = 0; spawnIndex < spawnCountThisSubWave; spawnIndex++) {
-                    SpawnMonster(monsterType.monster);
+                    SpawnMonster(monsterType.monster, waveNumber);
 
                     if (timeBetweenSpawns > 0f) {
                         yield return new WaitForSeconds(timeBetweenSpawns);
@@ -97,7 +128,7 @@ public class Spawner : MonoBehaviour {
         yield return null;
     }
 
-    void SpawnMonster(GameObject monster) {
+    void SpawnMonster(GameObject monster, int waveNumber = 1) {
         // Instantiate a monster prefab and initialize its behavior.
         if (monster == null) {
             if (!hasWarnedMissingEnemyPrefab) {
@@ -124,7 +155,36 @@ public class Spawner : MonoBehaviour {
         if (monsterComponent == null) {
             monsterComponent = newMonster.AddComponent<Monster>();
         }
+        // Apply stat scaling based on wave progression
+        // Tinting is naturally driven by the stat multiplier itself
+        int waveForScaling = Mathf.Max(1, waveNumber);
+        float tintFactor = Mathf.Clamp01((float)(waveForScaling - 1) / 10f); // Full tint by wave 11
+        float healthMultiplier = Mathf.Lerp(1f, maxHealthMultiplier, tintFactor);
+        float damageMultiplier = Mathf.Lerp(1f, maxDamageMultiplier, tintFactor);
+
+        EnemyHealth eh = newMonster.GetComponent<EnemyHealth>();
+        if (eh != null) {
+            eh.maxHealth *= healthMultiplier;
+            eh.currentHealth = eh.maxHealth;
+        }
+
         monsterComponent.Initialize(this, crystal != null ? crystal.transform : null);
+        monsterComponent.MultiplyDamage(damageMultiplier);
+
+        // Apply tint to renderers based on stat scaling (tint starts when stats scale)
+        if (tintFactor > 0f) {
+            Renderer[] rends = newMonster.GetComponentsInChildren<Renderer>();
+            Color tint = Color.Lerp(tintDark, tintBright, tintFactor);
+            MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+            for (int i = 0; i < rends.Length; i++) {
+                Renderer r = rends[i];
+                if (r == null) continue;
+                r.GetPropertyBlock(mpb);
+                mpb.SetColor("_Color", tint);
+                mpb.SetColor("_BaseColor", tint);
+                r.SetPropertyBlock(mpb);
+            }
+        }
     }
 
     public void NotifyMonsterDestroyed() {
