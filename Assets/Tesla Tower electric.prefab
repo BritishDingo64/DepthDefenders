@@ -52,11 +52,14 @@ MonoBehaviour:
   targetMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  turretHead: {fileID: 291329851629937954}
+  turretHead: {fileID: 316419529845875454}
   fireRate: 0.75
   damage: 10
   chainRange: 4
   maxChains: 6
+  zapEffectPrefab: {fileID: 2741819949689635206, guid: ffc08b41e3f4fdb44872078803a1ca0e, type: 3}
+  damagePopupPrefab: {fileID: 0}
+  damagePopupOffset: {x: 0, y: 1.5, z: 0}
 --- !u!136 &885871320403242630
 CapsuleCollider:
   m_ObjectHideFlags: 0

@@ -38,6 +38,8 @@ public class Monster : MonoBehaviour {
     string attackTriggerParam = "Attack";
     [SerializeField]
     string attackTargetParam = "AttackTarget";
+    [SerializeField]
+    AudioClip slashClip;
     [Header("Movement")]
     [SerializeField]
     bool useNavMeshAgent = true;
@@ -525,7 +527,14 @@ public class Monster : MonoBehaviour {
         // This method is called by animation events to apply damage at the correct frame.
         if (!ShouldUseAnimationAttackFlow()) return;
 
-        switch (queuedAttackTarget) {
+        PlaySlashSound();
+
+        AttackTargetType targetToHit = queuedAttackTarget;
+        if (targetToHit == AttackTargetType.None) {
+            targetToHit = ResolveAttackTargetInRange();
+        }
+
+        switch (targetToHit) {
             case AttackTargetType.Player:
                 DealDamageToPlayerHit();
                 break;
@@ -538,27 +547,19 @@ public class Monster : MonoBehaviour {
         }
     }
 
+    void PlaySlashSound() {
+        if (slashClip == null) return;
+
+        AudioSource.PlayClipAtPoint(slashClip, transform.position);
+    }
+
     public void AnimationEvent_ClearQueuedAttack() {
         // Clear the stored attack target when the animation finishes.
         queuedAttackTarget = AttackTargetType.None;
     }
 
-    // Animation event aliases for clips that use common method names.
-    public void Attack() {
-        AnimationEvent_DealDamage();
-    }
-
-    public void DealDamage() {
-        AnimationEvent_DealDamage();
-    }
-
-    public void EndAttack() {
-        AnimationEvent_ClearQueuedAttack();
-    }
-
     void DealDamageToPlayerHit() {
         if (playerHealth == null || damagePerAttack <= 0f) return;
-        if (!IsWithinAttackRange(playerTarget, GetPlayerStoppingDistance())) return;
 
         float damage = damagePerAttack * Mathf.Max(0.05f, attackAnimationInterval);
         bool killed = playerHealth.TakeDamage(damage);
@@ -570,7 +571,6 @@ public class Monster : MonoBehaviour {
 
     void DealDamageToBarricadeHit() {
         if (!HasBarricadeTarget() || damagePerAttack <= 0f) return;
-        if (!IsWithinAttackRange(barricadeTarget.transform, attackRange)) return;
 
         float damage = damagePerAttack * Mathf.Max(0.05f, attackAnimationInterval);
         barricadeTarget.TakeDamage(damage);
@@ -579,7 +579,6 @@ public class Monster : MonoBehaviour {
     void DealDamageToCrystalHit() {
         if (ShouldChasePlayer() || HasBarricadeTarget()) return;
         if (crystalTarget == null || damagePerAttack <= 0f) return;
-        if (!IsWithinAttackRange(crystalTarget, attackRange)) return;
 
         if (crystalComponent == null) {
             crystalComponent = crystalTarget.GetComponent<Crystal>();

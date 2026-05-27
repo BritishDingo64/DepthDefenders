@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5918563661025952354}
+  - component: {fileID: 911311026071626714}
   m_Layer: 0
   m_Name: skeleton holder
   m_TagString: Untagged
@@ -32,6 +33,28 @@ Transform:
   - {fileID: -8679921383154817045}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!95 &911311026071626714
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 205212647503780953}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 6c8b50328714f364e90c61f40c1f0e6a, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &919132149155446097
 GameObject:
   m_ObjectHideFlags: 0
@@ -47,6 +70,7 @@ GameObject:
   - component: {fileID: 5389604475902717232}
   - component: {fileID: 5134750855638539981}
   - component: {fileID: 3453917266594189140}
+  - component: {fileID: 6712334052404778725}
   m_Layer: 0
   m_Name: skeleton
   m_TagString: Untagged
@@ -62,13 +86,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 919132149155446097}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 5918563661025952354}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!33 &-5754084199372789682
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -149,7 +173,7 @@ CapsuleCollider:
   m_Radius: 0.53920466
   m_Height: 2.429567
   m_Direction: 1
-  m_Center: {x: -0.014885474, y: -0.54777753, z: -0.009409549}
+  m_Center: {x: -0.014885474, y: -0.6, z: -0.009409549}
 --- !u!195 &5389604475902717232
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -168,8 +192,8 @@ NavMeshAgent:
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
-  m_Height: 1.334012
-  m_BaseOffset: 0.667006
+  m_Height: 2.36
+  m_BaseOffset: 1.75
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
 --- !u!114 &5134750855638539981
@@ -186,14 +210,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Monster
   moveSpeed: 2.5
   distanceToReachAGivenPoint: 0.25
-  attackRange: 1.5
-  damagePerAttack: 10
+  attackRange: 3
+  damagePerAttack: 5
   detectionRange: 7
-  attackInterval: 0.25
+  attackInterval: 3
   animator: {fileID: 0}
-  useAnimationEventsForDamage: 1
+  useAnimationEventsForDamage: 0
   attackAnimationInterval: 0.7
-  moveSpeedParam: MoveSpeed
   isMovingParam: IsMoving
   attackTriggerParam: Attack
   attackTargetParam: AttackTarget
@@ -203,7 +226,7 @@ MonoBehaviour:
   playerAggroDistance: 6
   playerAggroConeAngle: 45
   playerTag: Player
-  stayAggroAfterDamaged: 1
+  stayAggroAfterDamaged: 0
 --- !u!114 &3453917266594189140
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -219,6 +242,7 @@ MonoBehaviour:
   maxHealth: 100
   currentHealth: 100
   canTakeDamage: 1
+  moneyRewardOnDeath: 10
   destroyOnDeath: 1
   destroyDelay: 0
   disableCollidersOnDeath: 1
@@ -234,3 +258,25 @@ MonoBehaviour:
   onHealthChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!95 &6712334052404778725
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132149155446097}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 0ded37fc4769fd44aaf5bf4bf649f21e, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0

@@ -18,6 +18,7 @@ public class PlayerAttack : MonoBehaviour
     public string attackTriggerParameter = "attack";
     public DamagePopup damagePopupPrefab;
     public Vector3 damagePopupOffset = new Vector3(0f, 1.5f, 0f);
+    public AudioClip punchClip;
     private float lastAttackTime = -999f;
     private int attackTriggerHash;
 
@@ -28,10 +29,16 @@ public class PlayerAttack : MonoBehaviour
         {
             if (Camera.main != null) playerCamera = Camera.main;
             else playerCamera = GetComponentInChildren<Camera>();
+
+            if (playerCamera == null)
+                playerCamera = GetComponentInParent<Camera>();
         }
 
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
+
+        if (animator == null)
+            animator = GetComponentInParent<Animator>();
 
         attackTriggerHash = Animator.StringToHash(attackTriggerParameter);
     }
@@ -39,11 +46,20 @@ public class PlayerAttack : MonoBehaviour
     private void Update()
     {
         // Fire an attack when the left mouse button is pressed and cooldown allows.
-        if (Input.GetMouseButtonDown(0) && Time.time - lastAttackTime >= attackCooldown)
+        if (WasAttackPressedThisFrame() && Time.time - lastAttackTime >= attackCooldown)
         {
             lastAttackTime = Time.time;
             DoAttack();
         }
+    }
+
+    public void Attack()
+    {
+        if (Time.time - lastAttackTime < attackCooldown)
+            return;
+
+        lastAttackTime = Time.time;
+        DoAttack();
     }
 
     private void DoAttack()
@@ -51,6 +67,8 @@ public class PlayerAttack : MonoBehaviour
         // Trigger attack animation and attempt to damage a valid enemy target.
         if (animator != null && !string.IsNullOrWhiteSpace(attackTriggerParameter))
             animator.SetTrigger(attackTriggerHash);
+
+        PlayPunchSound();
 
         EnemyHealth enemy = FindBestEnemyInFront();
         if (enemy != null)
@@ -77,6 +95,24 @@ public class PlayerAttack : MonoBehaviour
                 SpawnDamagePopup(hit.point, damage);
             }
         }
+    }
+
+    private void PlayPunchSound()
+    {
+        if (punchClip == null)
+            return;
+
+        AudioSource.PlayClipAtPoint(punchClip, transform.position);
+    }
+
+    private bool WasAttackPressedThisFrame()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (UnityEngine.InputSystem.Mouse.current != null && UnityEngine.InputSystem.Mouse.current.leftButton.wasPressedThisFrame)
+            return true;
+#endif
+
+        return Input.GetMouseButtonDown(0);
     }
 
     private EnemyHealth FindBestEnemyInFront()

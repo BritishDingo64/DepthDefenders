@@ -68,6 +68,8 @@ public class Crystal : MonoBehaviour {
         // Initialize crystal health and clamp to range.
         currentHealth = Mathf.Clamp(currentHealth <= 0f ? maxHealth : currentHealth, 0f, maxHealth);
 
+        RunStats.Reset();
+
         // Ensure any spawners in the scene are linked to this crystal.
         EnsureSpawnersAssigned();
 
@@ -168,6 +170,7 @@ public class Crystal : MonoBehaviour {
         // end the combat phase and return to building mode.
         if (!anySpawnerStillPendingOrActive && Spawner.ActiveEnemyCount <= 0) {
             waveStarted = false;
+            RunStats.RecordWaveSurvived();
             SetPhase(buildingPhase: true);
             DisplayText($"Wave {waveNumber} ended - building phase");
         }
@@ -213,6 +216,7 @@ public class Crystal : MonoBehaviour {
 
         if (gameOverUI != null) {
             gameOverUI.SetActive(true);
+            gameOverUI.SendMessage("ShowGameOver", SendMessageOptions.DontRequireReceiver);
         }
 
         if (buildModeRoot != null) buildModeRoot.SetActive(false);

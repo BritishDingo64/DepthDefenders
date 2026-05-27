@@ -47,6 +47,7 @@ public class EnemyHealth : MonoBehaviour
         if (currentHealth <= 0f)
         {
             onDied?.Invoke();
+            RunStats.RecordEnemyKilled();
             Die();
             return true;
         }

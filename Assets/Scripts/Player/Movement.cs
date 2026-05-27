@@ -44,6 +44,9 @@ public class Movement : MonoBehaviour
     public string jumpParameter = "jump";
     public string airParameter = "air";
 
+    [Header("Audio")]
+    public AudioSource footstepAudioSource;
+
     // private
     Rigidbody rb;
     CapsuleCollider capsule;
@@ -154,6 +157,7 @@ public class Movement : MonoBehaviour
         rb.linearVelocity = new Vector3(velXZ.x, rb.linearVelocity.y, velXZ.z);
 
         UpdateAnimatorSpeed();
+        UpdateFootsteps();
 
         // gravity modifications for better jump feel
         ApplyCustomGravity();
@@ -168,6 +172,30 @@ public class Movement : MonoBehaviour
         planarVelocity.y = 0f;
         animator.SetFloat(speedParameterHash, planarVelocity.magnitude);
         animator.SetBool(airParameterHash, !isGrounded);
+    }
+
+    void UpdateFootsteps()
+    {
+        Vector3 planarVelocity = rb.linearVelocity;
+        planarVelocity.y = 0f;
+        bool isMoving = isGrounded && planarVelocity.sqrMagnitude > 0.01f;
+
+        if (footstepAudioSource == null) return;
+
+        if (isMoving)
+        {
+            if (!footstepAudioSource.isPlaying)
+            {
+                if (footstepAudioSource.time > 0f)
+                    footstepAudioSource.UnPause();
+                else
+                    footstepAudioSource.Play();
+            }
+        }
+        else if (footstepAudioSource.isPlaying)
+        {
+            footstepAudioSource.Pause();
+        }
     }
 
     Vector3 ComputeDesiredVelocity()
