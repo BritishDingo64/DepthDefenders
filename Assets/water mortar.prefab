@@ -285,7 +285,7 @@ GameObject:
   - component: {fileID: 6918319440497117437}
   m_Layer: 0
   m_Name: water mortar
-  m_TagString: Untagged
+  m_TagString: Building
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -358,7 +358,7 @@ MonoBehaviour:
   arcHeight: 3
   projectileVisualPrefab: {fileID: 7208406021094826804, guid: 3b06f250b654b7c4880ef1b620d6e9db, type: 3}
   damagePopupPrefab: {fileID: 0}
-  damagePopupOffset: {x: 0, y: 1.5, z: 0}
+  damagePopupOffset: {x: 0, y: 1.12, z: 0}
 --- !u!1 &8624251523114341908
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using TMPro;
 
@@ -13,7 +14,10 @@ public class BuildMenu : MonoBehaviour
     [Header("Building Costs")]
     [SerializeField, Min(0)] int defaultBuildingCost = 50;
     [SerializeField] int[] buildingCosts = new int[] { 50, 75, 100, 125 };
-    [SerializeField, Min(1f)] float costIncreaseMultiplier = 1.1f;
+    [SerializeField, Min(0)] int barricadeTowerCost = 75;
+
+    [Header("Tower Limit")]
+    [SerializeField, Min(1)] int maxTowerCount = 50;
 
     [Header("Cost UI (optional)")]
     [SerializeField] TMP_Text[] buildingCostTexts;
@@ -29,7 +33,7 @@ public class BuildMenu : MonoBehaviour
     private GameObject currentPreview;
     private int selectedBuildingIndex = -1;
     private Renderer[] previewRenderers;
-    private int[] runtimeBuildingCosts;
+    private int placedTowerCount;
     
     void Start()
     {
@@ -39,8 +43,8 @@ public class BuildMenu : MonoBehaviour
             buildMenuCanvas.gameObject.SetActive(false);
         UpdateCursorState();
 
-        InitializeRuntimeBuildingCosts();
         RefreshBuildingCostTexts();
+        placedTowerCount = CountPlacedTowersInScene();
 
         // Setup preview manager
         if (previewManager != null)
@@ -107,6 +111,12 @@ public class BuildMenu : MonoBehaviour
         if (buildingIndex < 0 || buildingIndex >= buildingPrefabs.Length)
             return;
 
+        if (!CanPlaceMoreTowers())
+        {
+            Debug.Log($"Tower limit reached. Max towers: {maxTowerCount}");
+            return;
+        }
+
         int selectedBuildingCost = GetBuildingCost(buildingIndex);
         if (!CanAfford(selectedBuildingCost))
         {
@@ -121,6 +131,12 @@ public class BuildMenu : MonoBehaviour
     void StartPlacement()
     {
         // Create and show a preview object for the selected building.
+        if (!CanPlaceMoreTowers())
+        {
+            Debug.Log($"Tower limit reached. Max towers: {maxTowerCount}");
+            return;
+        }
+
         isPlacingBuilding = true;
         isMenuOpen = false;
         
@@ -197,6 +213,13 @@ public class BuildMenu : MonoBehaviour
         // Instantiate the actual building at the preview position if placement is valid.
         if (currentPreview == null)
             return;
+
+        if (!CanPlaceMoreTowers())
+        {
+            Debug.Log($"Tower limit reached. Max towers: {maxTowerCount}");
+            CancelPlacement();
+            return;
+        }
         
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
@@ -214,6 +237,8 @@ public class BuildMenu : MonoBehaviour
 
                 // Place the actual building
                 GameObject building = Instantiate(buildingPrefabs[selectedBuildingIndex], hit.point, currentPreview.transform.rotation);
+
+                placedTowerCount++;
                 
                 // Activate tower firing
                 BubbleMortarTower tower = building.GetComponent<BubbleMortarTower>();
@@ -222,7 +247,6 @@ public class BuildMenu : MonoBehaviour
                     tower.PlaceTower();
                 }
 
-                IncreaseBuildingCost(selectedBuildingIndex);
                 RefreshBuildingCostTexts();
                 
                 // Clean up and return to menu
@@ -234,55 +258,54 @@ public class BuildMenu : MonoBehaviour
 
     int GetBuildingCost(int buildingIndex)
     {
-        if (runtimeBuildingCosts != null && buildingIndex >= 0 && buildingIndex < runtimeBuildingCosts.Length)
-        {
-            return Mathf.Max(0, runtimeBuildingCosts[buildingIndex]);
-        }
+        if (buildingIndex < 0 || buildingIndex >= buildingPrefabs.Length)
+            return Mathf.Max(0, defaultBuildingCost);
+
+        GameObject prefab = buildingPrefabs[buildingIndex];
+        if (IsBarricadePrefab(prefab))
+            return Mathf.Max(0, barricadeTowerCost);
+
+        if (buildingCosts != null && buildingIndex < buildingCosts.Length)
+            return Mathf.Max(0, buildingCosts[buildingIndex]);
 
         return Mathf.Max(0, defaultBuildingCost);
     }
 
-    void InitializeRuntimeBuildingCosts()
-    {
-        int buildingCount = buildingPrefabs == null ? 0 : buildingPrefabs.Length;
-        runtimeBuildingCosts = new int[buildingCount];
-
-        for (int i = 0; i < buildingCount; i++)
-        {
-            int configuredCost = defaultBuildingCost;
-            if (buildingCosts != null && i < buildingCosts.Length)
-            {
-                configuredCost = buildingCosts[i];
-            }
-
-            runtimeBuildingCosts[i] = Mathf.Max(0, configuredCost);
-        }
-    }
-
-    void IncreaseBuildingCost(int buildingIndex)
-    {
-        if (runtimeBuildingCosts == null || buildingIndex < 0 || buildingIndex >= runtimeBuildingCosts.Length)
-            return;
-
-        float multiplier = Mathf.Max(1f, costIncreaseMultiplier);
-        int currentCost = Mathf.Max(0, runtimeBuildingCosts[buildingIndex]);
-        int increasedCost = Mathf.CeilToInt(currentCost * multiplier);
-        runtimeBuildingCosts[buildingIndex] = Mathf.Max(currentCost, increasedCost);
-    }
-
     void RefreshBuildingCostTexts()
     {
-        if (buildingCostTexts == null || runtimeBuildingCosts == null)
+        if (buildingCostTexts == null || buildingPrefabs == null)
             return;
 
-        int count = Mathf.Min(buildingCostTexts.Length, runtimeBuildingCosts.Length);
+        int count = Mathf.Min(buildingCostTexts.Length, buildingPrefabs.Length);
         for (int i = 0; i < count; i++)
         {
             if (buildingCostTexts[i] == null)
                 continue;
 
-            buildingCostTexts[i].text = $"Cost: {runtimeBuildingCosts[i]}";
+            buildingCostTexts[i].text = $"Cost: {GetBuildingCost(i)}";
         }
+    }
+
+    bool CanPlaceMoreTowers()
+    {
+        return placedTowerCount < maxTowerCount;
+    }
+
+    int CountPlacedTowersInScene()
+    {
+        GameObject[] buildings = GameObject.FindGameObjectsWithTag("Building");
+        return buildings == null ? 0 : buildings.Length;
+    }
+
+    bool IsBarricadePrefab(GameObject prefab)
+    {
+        if (prefab == null)
+            return false;
+
+        if (prefab.GetComponent<BarricadeDefenseTower>() != null)
+            return true;
+
+        return prefab.name.IndexOf("Barricade", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     bool CanAfford(int cost)
@@ -317,6 +340,13 @@ public class BuildMenu : MonoBehaviour
     void UpdateCursorState()
     {
         // Lock or unlock the cursor depending on build mode state.
+        if (GameOver.IsActive)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            return;
+        }
+
         bool buildingModeActive = isMenuOpen || isPlacingBuilding;
         Cursor.lockState = buildingModeActive ? CursorLockMode.None : CursorLockMode.Locked;
         Cursor.visible = buildingModeActive;

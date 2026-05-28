@@ -1,16 +1,12 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
-// Represents a wave of enemies with optional subwaves and monster type counts.
+// Represents a wave of enemies with two explicit monster slots: skeletons and knights.
 [Serializable]
 public class Wave {
-    // Number of monsters currently active/allowed to be alive for this wave configuration.
-    public int monsterCountInPlay;
+    [Tooltip("Skeleton enemy prefab and count for this wave.")]
+    public MonsterAndType skeletons;
 
-    // The list of monster types and counts to spawn as part of this wave.
-    public List<MonsterAndType> monsters;
-
-    // How many sub-waves (batches) this wave is split into. Used by spawners to schedule spawns.
-    public int numberOfSubWaves;
+    [Tooltip("Knight enemy prefab and count for this wave.")]
+    public MonsterAndType knights;
 }

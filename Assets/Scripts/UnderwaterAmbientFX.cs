@@ -73,7 +73,10 @@ public class UnderwaterAmbientFX : MonoBehaviour
         if (enabled)
         {
             ApplyEnvironment();
-            EnsureMotes();
+            if (Application.isPlaying)
+            {
+                EnsureMotes();
+            }
         }
     }
 
@@ -230,10 +233,13 @@ public class UnderwaterAmbientFX : MonoBehaviour
 
         motes.Clear(true);
 
-        if (!motes.isPlaying)
-            motes.Play();
+        if (Application.isPlaying)
+        {
+            if (!motes.isPlaying)
+                motes.Play();
 
-        motes.gameObject.SetActive(true);
+            motes.gameObject.SetActive(true);
+        }
     }
 
     private void UpdateMotes()

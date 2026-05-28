@@ -12,35 +12,34 @@ public class Spawner : MonoBehaviour {
     float arrowHeadSize = 1;
     [SerializeField]
     Color arrowColour;
+    [Header("Starting Wave")]
+    [Tooltip("Single starting wave template used for all later waves. Use the skeletons and knights slots.")]
     [SerializeField]
-    List<Wave> waves;
+    Wave startingWave;
 
-    [Header("Scaling Settings")]
-    [Tooltip("Percent increase in enemy counts per wave (0.08 = 8% per wave)")]
-    [SerializeField]
-    float enemyIncreasePercentPerWave = 0.08f;
+    [Header("Spawn Ramp")]
+    [Tooltip("Skeletons added per wave for each spawner until the max enemy count is reached.")]
+    [SerializeField, Min(1)]
+    int skeletonsPerWavePerSpawner = 2;
 
-    [Tooltip("Color used when stat scaling starts (tintFactor approaching 0)")]
-    [SerializeField]
-    Color tintDark = new Color(0.5f, 0.05f, 0.05f);
+    [Tooltip("Maximum enemies each spawner can create in a single wave.")]
+    [SerializeField, Min(1)]
+    int maxEnemiesPerSpawner = 20;
 
-    [Tooltip("Color used at maximum stat scaling (tintFactor == 1)")]
-    [SerializeField]
-    Color tintBright = new Color(1f, 0.05f, 0.05f);
+    [Tooltip("Knight share while the spawner is still below the enemy cap.")]
+    [SerializeField, Range(0f, 1f)]
+    float knightShareBeforeCap = 0.1f;
 
-    [Header("Stat Multipliers")]
-    [Tooltip("Maximum multiplier applied to enemy health at highest waves")]
-    [SerializeField]
-    float maxHealthMultiplier = 2.5f;
+    [Tooltip("Knight share added each wave after the cap is reached.")]
+    [SerializeField, Range(0f, 1f)]
+    float knightShareIncreaseAfterCap = 0.1f;
 
-    [Tooltip("Maximum multiplier applied to enemy damage at highest waves")]
-    [SerializeField]
-    float maxDamageMultiplier = 2.5f;
+    [Tooltip("Damage multiplier applied to knights each wave once the wave is 100% knights.")]
+    [SerializeField, Min(1f)]
+    float fullKnightDamageMultiplierPerWave = 1.1f;
 
     [SerializeField]
     float timeBetweenSpawns = 0.35f;
-    [SerializeField]
-    float timeBetweenSubWaves = 1f;
     public GameObject crystal;
     List<GameObject> instantiatedObjectPool = new();
     Crystal crystalComponent;
@@ -51,11 +50,15 @@ public class Spawner : MonoBehaviour {
     public static int ActiveEnemyCount => Mathf.Max(0, enemyCount);
     public bool IsSpawningWave => isSpawningWave;
     public int LastStartedWave => lastStartedWave;
-    public int TotalWaves => waves == null ? 0 : waves.Count;
+    public int TotalWaves => startingWave == null ? 0 : 1;
 
     private void Awake() {
         // Cache the crystal component to know when waves should start.
         if (crystal != null) crystalComponent = crystal.GetComponent<Crystal>();
+    }
+
+    private void OnValidate() {
+        ClampStartingWaveMonsterFields();
     }
 
     void Update() {
@@ -66,12 +69,11 @@ public class Spawner : MonoBehaviour {
 
     bool CanStartWave() {
         // Only start a spawn coroutine when a new wave has been triggered by the crystal.
-        return !isSpawningWave && crystalComponent != null && crystalComponent.waveStarted && crystalComponent.waveNumber > 0 && crystalComponent.waveNumber != lastStartedWave && (waves != null && waves.Count > 0);
+        return !isSpawningWave && crystalComponent != null && crystalComponent.waveStarted && crystalComponent.waveNumber > 0 && crystalComponent.waveNumber != lastStartedWave && startingWave != null;
     }
 
     public bool HasWaveConfigured(int waveNumber) {
-        // We allow infinite waves by treating the last configured wave as a template
-        return waveNumber > 0 && TotalWaves > 0;
+        return waveNumber > 0 && startingWave != null;
     }
 
     public bool HasPendingOrActiveWave(int waveNumber) {
@@ -80,46 +82,22 @@ public class Spawner : MonoBehaviour {
     }
 
     IEnumerator StartWave() {
-        // Spawn enemies across subwaves for the current wave.
+        // Spawn enemies for the current wave using a fixed per-spawner ramp.
         isSpawningWave = true;
         int waveNumber = crystalComponent.waveNumber;
-        // Use last defined wave as template when waveNumber exceeds configured waves
-        int templateIndex = Mathf.Clamp(waveNumber, 1, waves.Count) - 1;
-        Wave currentWave = waves[templateIndex];
-        int subWaveCount = Mathf.Max(1, currentWave.numberOfSubWaves);
-        Dictionary<MonsterAndType, int> remainingCounts = new();
+        Wave currentWave = startingWave;
+        Dictionary<MonsterAndType, int> spawnCounts = BuildRequestedCounts(currentWave, waveNumber);
 
-        // Support infinite waves: when waveNumber exceeds configured waves, use the last configured wave
-        // as a template and scale counts by waveMultiplier so enemy numbers grow each wave.
-        float waveMultiplier = 1f + Mathf.Max(0, waveNumber - 1) * enemyIncreasePercentPerWave;
+        foreach (MonsterAndType monsterType in GetMonsterSlots(currentWave)) {
+            if (monsterType == null || !spawnCounts.ContainsKey(monsterType)) continue;
 
-        foreach (MonsterAndType monsterType in currentWave.monsters) {
-            if (monsterType == null) continue;
-            int baseCount = Mathf.Max(0, monsterType.count);
-            remainingCounts[monsterType] = Mathf.CeilToInt(baseCount * waveMultiplier);
-        }
+            for (int spawnIndex = 0; spawnIndex < spawnCounts[monsterType]; spawnIndex++) {
+                bool isKnight = monsterType == currentWave.knights;
+                SpawnMonster(monsterType.monster, waveNumber, isKnight);
 
-        for (int subWaveIndex = 0; subWaveIndex < subWaveCount; subWaveIndex++) {
-            int remainingSubWaves = subWaveCount - subWaveIndex;
-
-            foreach (MonsterAndType monsterType in currentWave.monsters) {
-                if (monsterType == null || !remainingCounts.ContainsKey(monsterType)) continue;
-
-                int spawnCountThisSubWave = Mathf.CeilToInt((float)remainingCounts[monsterType] / remainingSubWaves);
-
-                for (int spawnIndex = 0; spawnIndex < spawnCountThisSubWave; spawnIndex++) {
-                    SpawnMonster(monsterType.monster, waveNumber);
-
-                    if (timeBetweenSpawns > 0f) {
-                        yield return new WaitForSeconds(timeBetweenSpawns);
-                    }
+                if (timeBetweenSpawns > 0f) {
+                    yield return new WaitForSeconds(timeBetweenSpawns);
                 }
-
-                remainingCounts[monsterType] -= spawnCountThisSubWave;
-            }
-
-            if (subWaveIndex < subWaveCount - 1 && timeBetweenSubWaves > 0f) {
-                yield return new WaitForSeconds(timeBetweenSubWaves);
             }
         }
 
@@ -128,7 +106,7 @@ public class Spawner : MonoBehaviour {
         yield return null;
     }
 
-    void SpawnMonster(GameObject monster, int waveNumber = 1) {
+    void SpawnMonster(GameObject monster, int waveNumber = 1, bool isKnight = false) {
         // Instantiate a monster prefab and initialize its behavior.
         if (monster == null) {
             if (!hasWarnedMissingEnemyPrefab) {
@@ -155,35 +133,119 @@ public class Spawner : MonoBehaviour {
         if (monsterComponent == null) {
             monsterComponent = newMonster.AddComponent<Monster>();
         }
-        // Apply stat scaling based on wave progression
-        // Tinting is naturally driven by the stat multiplier itself
-        int waveForScaling = Mathf.Max(1, waveNumber);
-        float tintFactor = Mathf.Clamp01((float)(waveForScaling - 1) / 10f); // Full tint by wave 11
-        float healthMultiplier = Mathf.Lerp(1f, maxHealthMultiplier, tintFactor);
-        float damageMultiplier = Mathf.Lerp(1f, maxDamageMultiplier, tintFactor);
 
-        EnemyHealth eh = newMonster.GetComponent<EnemyHealth>();
-        if (eh != null) {
-            eh.maxHealth *= healthMultiplier;
-            eh.currentHealth = eh.maxHealth;
+        float statMultiplier = isKnight ? GetKnightDamageMultiplier(waveNumber) : 1f;
+
+        EnemyHealth enemyHealth = newMonster.GetComponent<EnemyHealth>();
+        if (enemyHealth == null) {
+            enemyHealth = newMonster.GetComponentInChildren<EnemyHealth>();
+        }
+        if (enemyHealth != null) {
+            enemyHealth.maxHealth *= statMultiplier;
+            enemyHealth.currentHealth = enemyHealth.maxHealth;
         }
 
         monsterComponent.Initialize(this, crystal != null ? crystal.transform : null);
-        monsterComponent.MultiplyDamage(damageMultiplier);
+        monsterComponent.MultiplyDamage(statMultiplier);
+    }
 
-        // Apply tint to renderers based on stat scaling (tint starts when stats scale)
-        if (tintFactor > 0f) {
-            Renderer[] rends = newMonster.GetComponentsInChildren<Renderer>();
-            Color tint = Color.Lerp(tintDark, tintBright, tintFactor);
-            MaterialPropertyBlock mpb = new MaterialPropertyBlock();
-            for (int i = 0; i < rends.Length; i++) {
-                Renderer r = rends[i];
-                if (r == null) continue;
-                r.GetPropertyBlock(mpb);
-                mpb.SetColor("_Color", tint);
-                mpb.SetColor("_BaseColor", tint);
-                r.SetPropertyBlock(mpb);
-            }
+    Dictionary<MonsterAndType, int> BuildRequestedCounts(Wave currentWave, int waveNumber) {
+        Dictionary<MonsterAndType, int> requestedCounts = new();
+
+        MonsterAndType skeletonSlot = currentWave != null ? currentWave.skeletons : null;
+        MonsterAndType knightSlot = currentWave != null ? currentWave.knights : null;
+
+        if (skeletonSlot == null && knightSlot == null) {
+            return requestedCounts;
+        }
+
+        int totalCount = GetTotalEnemiesPerSpawner(waveNumber);
+        int knightCount = GetKnightCount(waveNumber, totalCount);
+        int skeletonCount = Mathf.Max(0, totalCount - knightCount);
+
+        if (skeletonSlot != null) {
+            requestedCounts[skeletonSlot] = skeletonCount;
+        }
+
+        if (knightSlot != null) {
+            requestedCounts[knightSlot] = knightCount;
+        }
+
+        return requestedCounts;
+    }
+
+    int GetTotalEnemiesPerSpawner(int waveNumber) {
+        int waves = Mathf.Max(1, waveNumber);
+        int total = waves * Mathf.Max(1, skeletonsPerWavePerSpawner);
+        return Mathf.Min(maxEnemiesPerSpawner, total);
+    }
+
+    int GetKnightCount(int waveNumber, int totalCount) {
+        if (totalCount <= 0) {
+            return 0;
+        }
+
+        int maxWaveToReachCap = GetWaveNumberAtMaxEnemyCount();
+        if (waveNumber <= maxWaveToReachCap) {
+            return Mathf.Clamp(Mathf.RoundToInt(totalCount * knightShareBeforeCap), 0, totalCount);
+        }
+
+        int wavesPastCap = Mathf.Max(0, waveNumber - maxWaveToReachCap);
+        float knightRatio = Mathf.Clamp01(knightShareBeforeCap + (wavesPastCap * knightShareIncreaseAfterCap));
+        return Mathf.Clamp(Mathf.RoundToInt(totalCount * knightRatio), 0, totalCount);
+    }
+
+    float GetKnightDamageMultiplier(int waveNumber) {
+        int maxWaveToReachCap = GetWaveNumberAtMaxEnemyCount();
+        int fullKnightWave = GetWaveNumberAtFullKnightRatio(maxWaveToReachCap);
+        if (waveNumber < fullKnightWave) {
+            return 1f;
+        }
+
+        int wavesPastFullKnightRatio = Mathf.Max(1, waveNumber - fullKnightWave + 1);
+        return Mathf.Pow(fullKnightDamageMultiplierPerWave, wavesPastFullKnightRatio);
+    }
+
+    int GetWaveNumberAtMaxEnemyCount() {
+        return Mathf.Max(1, Mathf.CeilToInt((float)maxEnemiesPerSpawner / Mathf.Max(1, skeletonsPerWavePerSpawner)));
+    }
+
+    int GetWaveNumberAtFullKnightRatio(int maxWaveToReachCap) {
+        if (knightShareIncreaseAfterCap <= 0f) {
+            return maxWaveToReachCap;
+        }
+
+        int wavesPastCapToReachFullKnights = Mathf.CeilToInt(Mathf.Max(0f, 1f - knightShareBeforeCap) / knightShareIncreaseAfterCap);
+        return maxWaveToReachCap + wavesPastCapToReachFullKnights;
+    }
+
+    MonsterAndType[] GetMonsterSlots(Wave wave) {
+        if (wave == null) return new MonsterAndType[0];
+
+        return new[] { wave.skeletons, wave.knights };
+    }
+
+    void ClampStartingWaveMonsterFields() {
+        if (startingWave == null) return;
+
+        if (startingWave.skeletons != null && startingWave.skeletons.count < 0) {
+            startingWave.skeletons.count = 0;
+        }
+
+        if (startingWave.knights != null && startingWave.knights.count < 0) {
+            startingWave.knights.count = 0;
+        }
+    }
+
+    private readonly struct SpawnerBudget {
+        public readonly Spawner Spawner;
+        public readonly int FloorBudget;
+        public readonly float Remainder;
+
+        public SpawnerBudget(Spawner spawner, int floorBudget, float remainder) {
+            Spawner = spawner;
+            FloorBudget = floorBudget;
+            Remainder = remainder;
         }
     }
 

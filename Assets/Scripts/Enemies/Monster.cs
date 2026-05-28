@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.AI;
+using TMPro;
 
 // Controls individual enemy movement, target selection, combat, and animations.
 public class Monster : MonoBehaviour {
@@ -7,7 +8,8 @@ public class Monster : MonoBehaviour {
         None = 0,
         Player = 1,
         Barricade = 2,
-        Crystal = 3
+        Tower = 3,
+        Crystal = 4
     }
 
     [SerializeField]
@@ -57,6 +59,22 @@ public class Monster : MonoBehaviour {
     string playerTag = "Player";
     [SerializeField]
     bool stayAggroAfterDamaged = true;
+    [Header("Tower Targeting")]
+    [SerializeField]
+    bool isKnightEnemy;
+    [SerializeField]
+    bool autoDetectKnightByName = true;
+    [SerializeField]
+    bool canAttackTowers = true;
+    [SerializeField, Min(0.5f)]
+    float towerDetectionRange = 6f;
+    [Header("World UI")]
+    [SerializeField]
+    TMP_Text worldHealthText;
+    [SerializeField]
+    Transform worldCanvasRoot;
+    [SerializeField]
+    bool faceWorldCanvasToCamera = true;
 
     Spawner spawner;
     Transform crystalTarget;
@@ -64,6 +82,7 @@ public class Monster : MonoBehaviour {
     PlayerHealth playerHealth;
     EnemyHealth enemyHealth;
     BarricadeDefenseTower barricadeTarget;
+    TowerHealth towerTarget;
     Crystal crystalComponent;
     NavMeshAgent navMeshAgent;
     Collider ownCollider;
@@ -74,7 +93,6 @@ public class Monster : MonoBehaviour {
     float nextPlayerAttackTime;
     float nextRepathTime;
     bool wasInattackRange;
-    int nextPathIndex;
     AttackTargetType queuedAttackTarget = AttackTargetType.None;
     float nextAnimationAttackTime;
     bool hasIsMovingParam;
@@ -105,6 +123,12 @@ public class Monster : MonoBehaviour {
             navMeshAgent.updateRotation = false;
             navMeshAgent.avoidancePriority = Random.Range(30, 70);
         }
+
+        UpdateWorldHealthText();
+    }
+
+    void LateUpdate() {
+        FaceWorldCanvas();
     }
 
     public void MultiplyDamage(float multiplier)
@@ -129,7 +153,6 @@ public class Monster : MonoBehaviour {
         // Set references used during movement and combat.
         spawner = owningSpawner;
         crystalTarget = crystal;
-        nextPathIndex = 0;
 
         if (playerTarget == null) {
             FindPlayerTarget();
@@ -147,6 +170,7 @@ public class Monster : MonoBehaviour {
         }
 
         RefreshBarricadeTarget();
+        RefreshTowerTarget();
         UpdateStatusEffects();
 
         Vector3 destination = GetCurrentDestination();
@@ -159,8 +183,11 @@ public class Monster : MonoBehaviour {
         else {
             TryAttackPlayer();
             TryAttackBarricade();
+            TryAttackTower();
             TryAttackCrystal();
         }
+
+        UpdateWorldHealthText();
     }
 
     float GetCurrentStoppingDistance() {
@@ -171,6 +198,10 @@ public class Monster : MonoBehaviour {
         }
 
         if (HasBarricadeTarget()) {
+            stoppingDistance = attackRange;
+        }
+
+        if (HasTowerTarget()) {
             stoppingDistance = attackRange;
         }
 
@@ -195,7 +226,7 @@ public class Monster : MonoBehaviour {
     }
 
     Vector3 GetCurrentDestination() {
-        // Decide whether to chase player, barricade, follow path, or move toward the crystal.
+        // Decide whether to chase player, barricade, or move directly toward the crystal.
         if (ShouldChasePlayer()) {
             // Stop moving if within attack range of player
             if (IsWithinAttackRange(playerTarget, attackRange)) {
@@ -208,18 +239,8 @@ public class Monster : MonoBehaviour {
             return SnapToNavMesh(barricadeTarget.transform.position);
         }
 
-        if (spawner != null && nextPathIndex < spawner.PathPointCount) {
-            Vector3 waypoint = SnapToNavMesh(spawner.GetPathPoint(nextPathIndex));
-            if (Vector3.Distance(transform.position, waypoint) <= distanceToReachAGivenPoint) {
-                nextPathIndex++;
-                if (nextPathIndex < spawner.PathPointCount) {
-                    waypoint = SnapToNavMesh(spawner.GetPathPoint(nextPathIndex));
-                }
-            }
-
-            if (nextPathIndex < spawner.PathPointCount) {
-                return waypoint;
-            }
+        if (HasTowerTarget()) {
+            return SnapToNavMesh(towerTarget.transform.position);
         }
 
         return crystalTarget != null ? SnapToNavMesh(crystalTarget.position) : transform.position;
@@ -357,6 +378,9 @@ public class Monster : MonoBehaviour {
         else if (HasBarricadeTarget() && IsWithinAttackRange(barricadeTarget.transform, attackRange)) {
             attackTarget = barricadeTarget.transform;
         }
+        else if (HasTowerTarget() && IsWithinAttackRange(towerTarget.transform, attackRange)) {
+            attackTarget = towerTarget.transform;
+        }
         else if (!HasBarricadeTarget() && crystalTarget != null && IsWithinAttackRange(crystalTarget, attackRange)) {
             attackTarget = crystalTarget;
         }
@@ -402,7 +426,11 @@ public class Monster : MonoBehaviour {
             return AttackTargetType.Barricade;
         }
 
-        if (!HasBarricadeTarget() && !ShouldChasePlayer() && crystalTarget != null && IsWithinAttackRange(crystalTarget, attackRange)) {
+        if (HasTowerTarget() && IsWithinAttackRange(towerTarget.transform, attackRange)) {
+            return AttackTargetType.Tower;
+        }
+
+        if (!HasBarricadeTarget() && !HasTowerTarget() && !ShouldChasePlayer() && crystalTarget != null && IsWithinAttackRange(crystalTarget, attackRange)) {
             return AttackTargetType.Crystal;
         }
 
@@ -464,8 +492,8 @@ public class Monster : MonoBehaviour {
     }
 
     void TryAttackCrystal() {
-        // Deal damage to the crystal only when not distracted by player or barricade.
-        if (ShouldChasePlayer() || HasBarricadeTarget()) return;
+        // Deal damage to the crystal only when not distracted by player, barricade, or tower targets.
+        if (ShouldChasePlayer() || HasBarricadeTarget() || HasTowerTarget()) return;
         if (crystalTarget == null || damagePerAttack <= 0f) return;
         if (!IsWithinAttackRange(crystalTarget, attackRange)) return;
 
@@ -483,6 +511,14 @@ public class Monster : MonoBehaviour {
         if (!IsWithinAttackRange(barricadeTarget.transform, attackRange)) return;
 
         barricadeTarget.TakeDamage(damagePerAttack * Time.deltaTime);
+    }
+
+    void TryAttackTower() {
+        // Knights can chip down nearby towers when they are in range.
+        if (!HasTowerTarget() || damagePerAttack <= 0f) return;
+        if (!IsWithinAttackRange(towerTarget.transform, attackRange)) return;
+
+        towerTarget.TakeDamage(damagePerAttack * Time.deltaTime);
     }
 
     void RefreshBarricadeTarget() {
@@ -504,6 +540,67 @@ public class Monster : MonoBehaviour {
 
     bool HasBarricadeTarget() {
         return barricadeTarget != null && !barricadeTarget.IsDestroyed;
+    }
+
+    void RefreshTowerTarget() {
+        if (!CanTargetTowers() || ShouldChasePlayer()) {
+            towerTarget = null;
+            return;
+        }
+
+        if (HasTowerTarget()) {
+            float sqrDistance = (towerTarget.transform.position - transform.position).sqrMagnitude;
+            if (sqrDistance <= towerDetectionRange * towerDetectionRange) {
+                return;
+            }
+        }
+
+        towerTarget = FindClosestTowerTarget();
+    }
+
+    bool HasTowerTarget() {
+        return towerTarget != null && !towerTarget.IsDestroyed;
+    }
+
+    TowerHealth FindClosestTowerTarget() {
+        TowerHealth[] towers = FindObjectsByType<TowerHealth>(FindObjectsSortMode.None);
+        TowerHealth closestTower = null;
+        float closestDistance = float.MaxValue;
+
+        for (int i = 0; i < towers.Length; i++) {
+            TowerHealth tower = towers[i];
+            if (tower == null || tower.IsDestroyed) {
+                continue;
+            }
+
+            float sqrDistance = (tower.transform.position - transform.position).sqrMagnitude;
+            if (sqrDistance > towerDetectionRange * towerDetectionRange) {
+                continue;
+            }
+
+            if (sqrDistance < closestDistance) {
+                closestDistance = sqrDistance;
+                closestTower = tower;
+            }
+        }
+
+        return closestTower;
+    }
+
+    bool CanTargetTowers() {
+        if (!canAttackTowers) {
+            return false;
+        }
+
+        if (isKnightEnemy) {
+            return true;
+        }
+
+        if (!autoDetectKnightByName) {
+            return false;
+        }
+
+        return gameObject.name.ToLowerInvariant().Contains("knight");
     }
 
     void UpdateStatusEffects() {
@@ -541,6 +638,9 @@ public class Monster : MonoBehaviour {
             case AttackTargetType.Barricade:
                 DealDamageToBarricadeHit();
                 break;
+            case AttackTargetType.Tower:
+                DealDamageToTowerHit();
+                break;
             case AttackTargetType.Crystal:
                 DealDamageToCrystalHit();
                 break;
@@ -576,8 +676,15 @@ public class Monster : MonoBehaviour {
         barricadeTarget.TakeDamage(damage);
     }
 
+    void DealDamageToTowerHit() {
+        if (!HasTowerTarget() || damagePerAttack <= 0f) return;
+
+        float damage = damagePerAttack * Mathf.Max(0.05f, attackAnimationInterval);
+        towerTarget.TakeDamage(damage);
+    }
+
     void DealDamageToCrystalHit() {
-        if (ShouldChasePlayer() || HasBarricadeTarget()) return;
+        if (ShouldChasePlayer() || HasBarricadeTarget() || HasTowerTarget()) return;
         if (crystalTarget == null || damagePerAttack <= 0f) return;
 
         if (crystalComponent == null) {
@@ -596,5 +703,50 @@ public class Monster : MonoBehaviour {
         Vector3 offset = target.position - transform.position;
         offset.y = 0f;
         return offset.sqrMagnitude <= range * range;
+    }
+
+    void UpdateWorldHealthText() {
+        if (worldHealthText == null || enemyHealth == null) {
+            return;
+        }
+
+        int currentHealth = Mathf.CeilToInt(enemyHealth.currentHealth);
+        int maxHealth = Mathf.CeilToInt(enemyHealth.maxHealth);
+        worldHealthText.text = $"{currentHealth} / {maxHealth}";
+    }
+
+    void FaceWorldCanvas() {
+        if (!faceWorldCanvasToCamera) {
+            return;
+        }
+
+        Transform canvasTransform = GetWorldCanvasTransform();
+        if (canvasTransform == null) {
+            return;
+        }
+
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null) {
+            return;
+        }
+
+        Vector3 lookDirection = canvasTransform.position - mainCamera.transform.position;
+        if (lookDirection.sqrMagnitude <= 0.0001f) {
+            return;
+        }
+
+        canvasTransform.rotation = Quaternion.LookRotation(lookDirection.normalized, Vector3.up);
+    }
+
+    Transform GetWorldCanvasTransform() {
+        if (worldCanvasRoot != null) {
+            return worldCanvasRoot;
+        }
+
+        if (worldHealthText != null && worldHealthText.canvas != null) {
+            return worldHealthText.canvas.transform;
+        }
+
+        return null;
     }
 }

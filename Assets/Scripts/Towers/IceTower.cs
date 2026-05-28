@@ -171,7 +171,7 @@ public class IceTower : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.cyan;
+        Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, range);
     }
 }

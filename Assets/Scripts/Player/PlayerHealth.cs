@@ -96,6 +96,21 @@ public class PlayerHealth : MonoBehaviour
         onHealthChanged?.Invoke(currentHealth / maxHealth);
     }
 
+    public void ForceDeathWithoutRespawn()
+    {
+        if (IsDead)
+        {
+            SetCanTakeDamage(false);
+            return;
+        }
+
+        respawnOnDeath = false;
+        currentHealth = 0f;
+        onHealthChanged?.Invoke(0f);
+        onDied?.Invoke();
+        Die();
+    }
+
     private void Die()
     {
         // Activate ragdoll and optionally start a respawn routine.

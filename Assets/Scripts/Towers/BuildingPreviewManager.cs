@@ -33,19 +33,31 @@ public class BuildingPreviewManager : MonoBehaviour
     {
         // Create preview cameras and models for each building prefab.
         buildMenu = GetComponent<BuildMenu>();
-        int buildingCount = buildingPrefabs.Length;
-        
-        // Verify we have the right number of buttons and images assigned
-        if (previewImages == null || previewImages.Length != buildingCount)
+        if (buildMenu == null)
         {
-            Debug.LogError($"BuildingPreviewManager: Please assign {buildingCount} RawImage components in the Inspector!");
+            buildMenu = GetComponentInParent<BuildMenu>();
+        }
+
+        int configuredBuildingCount = buildingPrefabs == null ? 0 : buildingPrefabs.Length;
+        if (configuredBuildingCount <= 0)
+        {
+            Debug.LogWarning("BuildingPreviewManager: No building prefabs configured.");
+            return;
+        }
+
+        int imageCount = previewImages == null ? 0 : previewImages.Length;
+        int buttonCount = previewButtons == null ? 0 : previewButtons.Length;
+        int buildingCount = Mathf.Min(configuredBuildingCount, imageCount, buttonCount);
+
+        if (buildingCount <= 0)
+        {
+            Debug.LogError("BuildingPreviewManager: Missing preview images or buttons.");
             return;
         }
         
-        if (previewButtons == null || previewButtons.Length != buildingCount)
+        if (configuredBuildingCount != imageCount || configuredBuildingCount != buttonCount)
         {
-            Debug.LogError($"BuildingPreviewManager: Please assign {buildingCount} Button components in the Inspector!");
-            return;
+            Debug.LogWarning($"BuildingPreviewManager: Count mismatch (prefabs={configuredBuildingCount}, images={imageCount}, buttons={buttonCount}). Using first {buildingCount} entries.");
         }
         
         previewTextures = new RenderTexture[buildingCount];
@@ -116,7 +128,11 @@ public class BuildingPreviewManager : MonoBehaviour
             
             // Setup button click listener
             int index = i; // Capture for closure
-            previewButtons[i].onClick.AddListener(() => buildMenu.SelectBuilding(index));
+            previewButtons[i].onClick.RemoveAllListeners();
+            if (buildMenu != null)
+            {
+                previewButtons[i].onClick.AddListener(() => buildMenu.SelectBuilding(index));
+            }
         }
 
         CachePreviewSettings();

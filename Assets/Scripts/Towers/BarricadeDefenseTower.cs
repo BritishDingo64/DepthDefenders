@@ -105,4 +105,10 @@ public class BarricadeDefenseTower : MonoBehaviour
 
         return closestBarricade;
     }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, aggroRadius);
+    }
 }

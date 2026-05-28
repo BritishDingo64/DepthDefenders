@@ -194,7 +194,7 @@ GameObject:
   - component: {fileID: 4793316144815266426}
   m_Layer: 0
   m_Name: Ice Launcher
-  m_TagString: Untagged
+  m_TagString: Building
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -241,6 +241,8 @@ MonoBehaviour:
   iciclePrefab: {fileID: 5710300262943912727}
   icicleSpeed: 20
   impactOffset: {x: 0, y: 0.8, z: 0}
+  damagePopupPrefab: {fileID: 0}
+  damagePopupOffset: {x: 0, y: 1.2, z: 0}
 --- !u!136 &4793316144815266426
 CapsuleCollider:
   m_ObjectHideFlags: 0

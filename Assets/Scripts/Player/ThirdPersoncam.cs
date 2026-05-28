@@ -36,6 +36,12 @@ public class ThirdPersoncam : MonoBehaviour {
         }
     }
     private void Update() {
+        if (GameOver.IsActive) {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            return;
+        }
+
         // Don't lock/control camera if build menu is open
         if (buildMenu != null && buildMenu.IsMenuOpen())
             return;

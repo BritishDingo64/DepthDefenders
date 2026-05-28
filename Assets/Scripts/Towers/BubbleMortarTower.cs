@@ -21,7 +21,6 @@ public class BubbleMortarTower : MonoBehaviour
 
     private float nextShotTime;
     private Animator animator;
-    private bool hasTarget;
     private bool isPlaced;
 
     private void Start()
@@ -44,12 +43,9 @@ public class BubbleMortarTower : MonoBehaviour
         EnemyHealth target = TowerTargetingUtility.FindClosestEnemy(transform.position, range, targetMask);
         if (target == null)
         {
-            hasTarget = false;
             ResetAnimation();
             return;
         }
-
-        hasTarget = true;
 
         if (Time.time < nextShotTime)
         {
@@ -102,7 +98,7 @@ public class BubbleMortarTower : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.blue;
+        Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, range);
     }
 }

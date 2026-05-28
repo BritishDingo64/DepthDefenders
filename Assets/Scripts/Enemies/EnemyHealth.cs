@@ -12,7 +12,7 @@ public class EnemyHealth : MonoBehaviour
     [Min(1f)] public float maxHealth = 100f;
     [Min(0f)] public float currentHealth;
     [SerializeField] private bool canTakeDamage = true;
-    [SerializeField, Min(0)] private int moneyRewardOnDeath = 10;
+    [SerializeField, Min(0)] private int moneyRewardOnDeath = 15;
     [SerializeField] private bool destroyOnDeath = true;
     [SerializeField] private float destroyDelay = 0f;
     [SerializeField] private bool disableCollidersOnDeath = true;

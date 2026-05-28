@@ -101,10 +101,10 @@ public class Crystal : MonoBehaviour {
 
     void HasPlayerStartedWave() {
         if (!waveStarted) {
-            bool lookingAtCrystal = IsPlayerLookingAt();
+            bool isPlayerInRange = IsPlayerInRange();
 
-            // Show prompt when player looks at the crystal.
-            if (lookingAtCrystal) {
+            // Show prompt when the player is close enough to interact.
+            if (isPlayerInRange) {
                 SetTemporaryStatus($"Press {startWaveInteractKey} to start wave | Press {startWaveRemoteKey} to start remotely", 0.1f);
             }
 
@@ -114,14 +114,14 @@ public class Crystal : MonoBehaviour {
                 return;
             }
 
-            // Direct interact input when looking at the crystal.
-            if (lookingAtCrystal && Input.GetKeyDown(startWaveInteractKey)) {
+            // Direct interact input when the player is within range of the crystal.
+            if (isPlayerInRange && Input.GetKeyDown(startWaveInteractKey)) {
                 StartNextWave();
             }
         }
     }
 
-    bool IsPlayerLookingAt() {
+    bool IsPlayerInRange() {
         if (orientation == null) {
             if (Camera.main != null) {
                 orientation = Camera.main.gameObject;
@@ -131,15 +131,9 @@ public class Crystal : MonoBehaviour {
             }
         }
 
-        // Raycast from the player's orientation forward to determine if the player is looking
-        // at the crystal (within `interactDistance`). This allows interaction prompts only
-        // when the player is intentionally looking at the crystal object or one of its children.
-        Ray raycast = new Ray(orientation.transform.position, orientation.transform.forward);
-        if (!Physics.Raycast(raycast.origin, raycast.direction, out RaycastHit hitInfo, interactDistance)) {
-            return false;
-        }
-
-        return hitInfo.transform == transform || hitInfo.transform.IsChildOf(transform);
+        // Allow interaction when the player is simply close enough to the crystal.
+        float distanceToCrystal = Vector3.Distance(orientation.transform.position, transform.position);
+        return distanceToCrystal <= interactDistance;
     }
 
     void StartNextWave() {
@@ -209,18 +203,50 @@ public class Crystal : MonoBehaviour {
         }
     }
 
+    public void TriggerGameOverForTesting() {
+        if (isGameOver) return;
+
+        currentHealth = 0f;
+        HandleGameOver();
+    }
+
     void HandleGameOver() {
         isGameOver = true;
         waveStarted = false;
-        DisplayText("Game over - the crystal was destroyed");
 
-        if (gameOverUI != null) {
-            gameOverUI.SetActive(true);
-            gameOverUI.SendMessage("ShowGameOver", SendMessageOptions.DontRequireReceiver);
-        }
+        ActivateGameOverUI();
+        KillPlayerWithoutRespawn();
 
         if (buildModeRoot != null) buildModeRoot.SetActive(false);
         if (combatModeRoot != null) combatModeRoot.SetActive(false);
+    }
+
+    void ActivateGameOverUI() {
+        if (gameOverUI == null) {
+            GameOver.ShowGameOverIfAvailable();
+            return;
+        }
+
+        gameOverUI.SetActive(true);
+
+        GameOver gameOver = gameOverUI.GetComponent<GameOver>();
+        if (gameOver == null) {
+            gameOver = gameOverUI.GetComponentInChildren<GameOver>(true);
+        }
+        if (gameOver == null) {
+            gameOver = gameOverUI.GetComponentInParent<GameOver>();
+        }
+
+        if (gameOver != null) {
+            gameOver.ShowGameOver();
+        }
+    }
+
+    void KillPlayerWithoutRespawn() {
+        PlayerHealth playerHealth = FindFirstObjectByType<PlayerHealth>();
+        if (playerHealth != null) {
+            playerHealth.ForceDeathWithoutRespawn();
+        }
     }
 
     void DisplayText() {
@@ -318,5 +344,10 @@ public class Crystal : MonoBehaviour {
         Color c = phaseText.color;
         c.a = Mathf.Clamp01(alpha);
         phaseText.color = c;
+    }
+
+    void OnDrawGizmosSelected() {
+        Gizmos.color = new Color(0.2f, 1f, 0.2f, 0.75f);
+        Gizmos.DrawWireSphere(transform.position, interactDistance);
     }
 }
