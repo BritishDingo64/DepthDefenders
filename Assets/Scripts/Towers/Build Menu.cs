@@ -26,6 +26,7 @@ public class BuildMenu : MonoBehaviour
     public Material validPlacementMaterial; // Green material
     public Material invalidPlacementMaterial; // Red material
     public LayerMask groundLayer; // What counts as valid ground
+    public LayerMask wallLayer; // What counts as blocked wall objects
     public BuildingPreviewManager previewManager; // Assign this in Inspector
     
     private bool isMenuOpen = false;
@@ -104,6 +105,10 @@ public class BuildMenu : MonoBehaviour
     {
         return isMenuOpen;
     }
+
+    public int CurrentTowerCount => placedTowerCount;
+
+    public int MaxTowerCount => maxTowerCount;
     
     // Call this from UI buttons (0-3)
     public void SelectBuilding(int buildingIndex)
@@ -167,8 +172,7 @@ public class BuildMenu : MonoBehaviour
     
     void UpdatePreviewPosition()
     {
-        // Raycast from the camera to determine the preview placement position on `groundLayer`.
-        // Also updates preview materials to indicate valid/invalid placement.
+        // Raycast from the camera to determine the preview placement position and block walls.
         if (currentPreview == null)
             return;
         
@@ -176,7 +180,7 @@ public class BuildMenu : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         
-        if (Physics.Raycast(ray, out hit, 1000f, groundLayer))
+        if (TryGetGroundHit(ray, out hit))
         {
             currentPreview.transform.position = hit.point;
             
@@ -194,12 +198,14 @@ public class BuildMenu : MonoBehaviour
     
     bool IsValidPlacement(Vector3 position)
     {
-        // Check if the position is valid for placement and not overlapping other buildings.
-        // You can add more complex checks here (overlapping with other buildings, etc.)
+        // Check if the position is valid for placement and not overlapping walls or other buildings.
         Collider[] overlaps = Physics.OverlapSphere(position, 1f);
         
         foreach (Collider col in overlaps)
         {
+            if (IsInLayerMask(col.gameObject.layer, wallLayer))
+                return false;
+
             // Check if overlapping with other buildings
             if (col.CompareTag("Building"))
                 return false;
@@ -224,7 +230,7 @@ public class BuildMenu : MonoBehaviour
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
         
-        if (Physics.Raycast(ray, out hit, 1000f, groundLayer))
+        if (TryGetGroundHit(ray, out hit))
         {
             if (IsValidPlacement(hit.point))
             {
@@ -254,6 +260,19 @@ public class BuildMenu : MonoBehaviour
                 ToggleMenu(); // Reopen menu after placing
             }
         }
+    }
+
+    bool TryGetGroundHit(Ray ray, out RaycastHit hit)
+    {
+        if (!Physics.Raycast(ray, out hit, 1000f))
+            return false;
+
+        return IsInLayerMask(hit.collider.gameObject.layer, groundLayer);
+    }
+
+    bool IsInLayerMask(int layer, LayerMask mask)
+    {
+        return (mask.value & (1 << layer)) != 0;
     }
 
     int GetBuildingCost(int buildingIndex)
@@ -306,6 +325,30 @@ public class BuildMenu : MonoBehaviour
             return true;
 
         return prefab.name.IndexOf("Barricade", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    void ApplyTowerDamageUpgrade(GameObject building)
+    {
+        if (building == null)
+            return;
+
+        BubbleMortarTower bubbleMortarTower = building.GetComponent<BubbleMortarTower>();
+        if (bubbleMortarTower != null)
+        {
+            bubbleMortarTower.ApplyDamageMultiplier(WaveUpgradeManager.TowerDamageMultiplier);
+        }
+
+        IceTower iceTower = building.GetComponent<IceTower>();
+        if (iceTower != null)
+        {
+            iceTower.ApplyDamageMultiplier(WaveUpgradeManager.TowerDamageMultiplier);
+        }
+
+        TeslaChainTower teslaTower = building.GetComponent<TeslaChainTower>();
+        if (teslaTower != null)
+        {
+            teslaTower.ApplyDamageMultiplier(WaveUpgradeManager.TowerDamageMultiplier);
+        }
     }
 
     bool CanAfford(int cost)

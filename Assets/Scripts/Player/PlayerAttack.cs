@@ -21,6 +21,10 @@ public class PlayerAttack : MonoBehaviour
     public AudioClip punchClip;
     private float lastAttackTime = -999f;
     private int attackTriggerHash;
+    private float baseDamage;
+    private float baseAttackCooldown;
+    private float lifestealPercent;
+    private PlayerHealth playerHealth;
 
     private void Start()
     {
@@ -41,6 +45,12 @@ public class PlayerAttack : MonoBehaviour
             animator = GetComponentInParent<Animator>();
 
         attackTriggerHash = Animator.StringToHash(attackTriggerParameter);
+        baseDamage = Mathf.Max(0f, damage);
+        baseAttackCooldown = Mathf.Max(0.01f, attackCooldown);
+        playerHealth = FindFirstObjectByType<PlayerHealth>();
+        ApplyDamageMultiplier(WaveUpgradeManager.PlayerDamageMultiplier);
+        ApplyFireRateMultiplier(WaveUpgradeManager.PlayerFireRateMultiplier);
+        ApplyLifestealPercent(WaveUpgradeManager.LifestealPercent);
     }
 
     private void Update()
@@ -73,8 +83,7 @@ public class PlayerAttack : MonoBehaviour
         EnemyHealth enemy = FindBestEnemyInFront();
         if (enemy != null)
         {
-            enemy.TakeDamage(damage);
-            SpawnDamagePopup(enemy.transform.position, damage);
+            DealDamage(enemy, enemy.transform.position);
             return;
         }
 
@@ -91,8 +100,32 @@ public class PlayerAttack : MonoBehaviour
             EnemyHealth enemyHealth = hit.collider.GetComponentInParent<EnemyHealth>();
             if (enemyHealth != null)
             {
-                enemyHealth.TakeDamage(damage);
-                SpawnDamagePopup(hit.point, damage);
+                DealDamage(enemyHealth, hit.point);
+            }
+        }
+    }
+
+    private void DealDamage(EnemyHealth enemy, Vector3 popupPosition)
+    {
+        if (enemy == null || enemy.IsDead)
+        {
+            return;
+        }
+
+        float finalDamage = WaveUpgradeManager.ApplyCriticalHit(damage, out _);
+        enemy.TakeDamage(finalDamage);
+        SpawnDamagePopup(popupPosition, finalDamage);
+
+        if (lifestealPercent > 0f)
+        {
+            if (playerHealth == null)
+            {
+                playerHealth = FindFirstObjectByType<PlayerHealth>();
+            }
+
+            if (playerHealth != null)
+            {
+                playerHealth.Heal(finalDamage * lifestealPercent);
             }
         }
     }
@@ -173,6 +206,23 @@ public class PlayerAttack : MonoBehaviour
         }
 
         popup.Initialize(Mathf.RoundToInt(amount).ToString());
+    }
+
+    public void ApplyDamageMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0f, multiplier);
+        damage = baseDamage * multiplier;
+    }
+
+    public void ApplyFireRateMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0.01f, multiplier);
+        attackCooldown = baseAttackCooldown / multiplier;
+    }
+
+    public void ApplyLifestealPercent(float percent)
+    {
+        lifestealPercent = Mathf.Max(0f, percent);
     }
 
     // Editor-only gizmos: visualize attack reach and detection region for tuning in the scene view.

@@ -76,6 +76,11 @@ public class ESCmenu : MonoBehaviour
 
     private void Update()
     {
+        if (WaveUpgradeManager.IsSelectionActive)
+        {
+            return;
+        }
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             if (isOpen)

@@ -25249,7 +25249,7 @@ MonoBehaviour:
   maxHealth: 100
   currentHealth: 100
   canTakeDamage: 1
-  moneyRewardOnDeath: 10
+  moneyRewardOnDeath: 5
   destroyOnDeath: 1
   destroyDelay: 3
   disableCollidersOnDeath: 1

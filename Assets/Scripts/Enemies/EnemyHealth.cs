@@ -12,7 +12,7 @@ public class EnemyHealth : MonoBehaviour
     [Min(1f)] public float maxHealth = 100f;
     [Min(0f)] public float currentHealth;
     [SerializeField] private bool canTakeDamage = true;
-    [SerializeField, Min(0)] private int moneyRewardOnDeath = 15;
+    [SerializeField, Min(0)] private int moneyRewardOnDeath = 5;
     [SerializeField] private bool destroyOnDeath = true;
     [SerializeField] private float destroyDelay = 0f;
     [SerializeField] private bool disableCollidersOnDeath = true;
@@ -118,6 +118,7 @@ public class EnemyHealth : MonoBehaviour
         if (moneyRewardOnDeath <= 0) return;
 
         hasGrantedDeathReward = true;
-        Currency.TryAddMoney(moneyRewardOnDeath);
+        int rewardAmount = Mathf.RoundToInt(moneyRewardOnDeath * WaveUpgradeManager.EnemyGoldMultiplier);
+        Currency.TryAddMoney(rewardAmount);
     }
 }

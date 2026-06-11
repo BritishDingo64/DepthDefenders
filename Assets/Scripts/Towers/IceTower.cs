@@ -24,10 +24,17 @@ public class IceTower : MonoBehaviour
     private float nextShotTime;
     private Vector3 initialTurretLocalEuler;
     private bool hasInitialTurretLocalEuler;
+    private float baseDamage;
+    private float baseFireRate;
 
     private void Start()
     {
         // Cache initial turret rotation for smooth aiming.
+        baseDamage = Mathf.Max(0f, damage);
+        baseFireRate = Mathf.Max(0.01f, fireRate);
+        ApplyDamageMultiplier(WaveUpgradeManager.TowerDamageMultiplier);
+        ApplyFireRateMultiplier(WaveUpgradeManager.TowerFireRateMultiplier);
+
         if (turretHead != null)
         {
             initialTurretLocalEuler = turretHead.localEulerAngles;
@@ -173,5 +180,17 @@ public class IceTower : MonoBehaviour
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, range);
+    }
+
+    public void ApplyDamageMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0f, multiplier);
+        damage = baseDamage * multiplier;
+    }
+
+    public void ApplyFireRateMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0.01f, multiplier);
+        fireRate = baseFireRate * multiplier;
     }
 }

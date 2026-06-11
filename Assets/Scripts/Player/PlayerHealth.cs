@@ -34,13 +34,16 @@ public class PlayerHealth : MonoBehaviour
     private Vector3 spawnPosition;
     private Quaternion spawnRotation;
     private bool ragdollActive;
+    private float baseMaxHealth;
     public bool IsDead => currentHealth <= 0f;
 
     private void Awake()
     {
         // Initialize health and cache components used for ragdoll and respawn.
+        baseMaxHealth = Mathf.Max(1f, maxHealth);
         currentHealth = Mathf.Clamp(currentHealth <= 0f ? maxHealth : currentHealth, 0f, maxHealth);
         onHealthChanged?.Invoke(currentHealth / maxHealth);
+        ApplyHealthMultiplier(WaveUpgradeManager.PlayerHealthMultiplier);
         characterController = GetComponent<CharacterController>();
         rigidbodyComponent = GetComponent<Rigidbody>();
         animator = GetComponentInChildren<Animator>(true);
@@ -80,7 +83,7 @@ public class PlayerHealth : MonoBehaviour
         if (IsDead) return;
         if (amount <= 0f) return;
 
-        currentHealth = Mathf.Clamp(currentHealth + amount, 0f, maxHealth);
+        currentHealth = Mathf.Clamp(currentHealth + (amount * WaveUpgradeManager.HealingReceivedMultiplier), 0f, maxHealth);
         onHealed?.Invoke();
         onHealthChanged?.Invoke(currentHealth / maxHealth);
     }
@@ -93,6 +96,16 @@ public class PlayerHealth : MonoBehaviour
     public void ResetHealthToMax()
     {
         currentHealth = maxHealth;
+        onHealthChanged?.Invoke(currentHealth / maxHealth);
+    }
+
+    public void ApplyHealthMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0f, multiplier);
+        float healthRatio = maxHealth > 0f ? currentHealth / maxHealth : 1f;
+        maxHealth = baseMaxHealth * multiplier;
+        currentHealth = Mathf.Clamp(healthRatio * maxHealth, 0f, maxHealth);
+
         onHealthChanged?.Invoke(currentHealth / maxHealth);
     }
 

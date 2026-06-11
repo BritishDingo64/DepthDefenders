@@ -22,6 +22,7 @@ public class Crystal : MonoBehaviour {
     float maxHealth = 500f;
     [SerializeField]
     float currentHealth;
+    float baseMaxHealth;
 
     [Header("Input")]
     [SerializeField]
@@ -66,9 +67,12 @@ public class Crystal : MonoBehaviour {
 
     void Start() {
         // Initialize crystal health and clamp to range.
-        currentHealth = Mathf.Clamp(currentHealth <= 0f ? maxHealth : currentHealth, 0f, maxHealth);
-
         RunStats.Reset();
+        WaveUpgradeManager.ResetRunState();
+
+        baseMaxHealth = Mathf.Max(1f, maxHealth);
+        currentHealth = Mathf.Clamp(currentHealth <= 0f ? maxHealth : currentHealth, 0f, maxHealth);
+        ApplyHealthMultiplier(WaveUpgradeManager.CrystalHealthMultiplier);
 
         // Ensure any spawners in the scene are linked to this crystal.
         EnsureSpawnersAssigned();
@@ -89,6 +93,10 @@ public class Crystal : MonoBehaviour {
             return;
         }
 
+        if (WaveUpgradeManager.IsSelectionActive) {
+            return;
+        }
+
         // Check whether the player has requested the next wave.
         HasPlayerStartedWave();
 
@@ -97,6 +105,10 @@ public class Crystal : MonoBehaviour {
 
         // Keep UI updated each frame.
         UpdateUI();
+    }
+
+    void LateUpdate() {
+        FaceCrystalHealthTextToPlayer();
     }
 
     void HasPlayerStartedWave() {
@@ -166,7 +178,8 @@ public class Crystal : MonoBehaviour {
             waveStarted = false;
             RunStats.RecordWaveSurvived();
             SetPhase(buildingPhase: true);
-            DisplayText($"Wave {waveNumber} ended - building phase");
+            DisplayText($"Wave {waveNumber} ended - choose an upgrade");
+            WaveUpgradeManager.BeginWaveUpgradeSelection(this, waveNumber);
         }
     }
 
@@ -201,6 +214,13 @@ public class Crystal : MonoBehaviour {
         if (currentHealth <= 0f) {
             HandleGameOver();
         }
+    }
+
+    public void ApplyHealthMultiplier(float multiplier) {
+        multiplier = Mathf.Max(0f, multiplier);
+        float healthRatio = maxHealth > 0f ? currentHealth / maxHealth : 1f;
+        maxHealth = baseMaxHealth * multiplier;
+        currentHealth = Mathf.Clamp(healthRatio * maxHealth, 0f, maxHealth);
     }
 
     public void TriggerGameOverForTesting() {
@@ -279,8 +299,12 @@ public class Crystal : MonoBehaviour {
         string phaseLabel = isGameOver ? "Game Over" : (waveStarted ? "Combat Phase" : "Building Phase");
         UpdatePhaseLabel(phaseLabel);
 
+        string towerStatusText = GetTowerStatusText();
+
         if (waveInfoText != null) {
-            waveInfoText.text = $"Wave: {waveNumber}  |  Monsters Left: {Spawner.ActiveEnemyCount}";
+            waveInfoText.text = towerStatusText == null
+                ? $"Wave: {waveNumber}  |  Monsters Left: {Spawner.ActiveEnemyCount}"
+                : $"Wave: {waveNumber}  |  Monsters Left: {Spawner.ActiveEnemyCount}  |  {towerStatusText}";
         }
 
         if (crystalHealthText != null) {
@@ -295,10 +319,40 @@ public class Crystal : MonoBehaviour {
             else {
                 temporaryStatusMessage = string.Empty;
                 statusText.text = waveStarted
-                    ? "Defend the crystal!"
-                    : $"Look at crystal + {startWaveInteractKey} (or press {startWaveRemoteKey}) to start next wave";
+                    ? AppendTowerStatus("Defend the crystal!")
+                    : AppendTowerStatus($"Look at crystal + {startWaveInteractKey} (or press {startWaveRemoteKey}) to start next wave");
             }
         }
+    }
+
+    string AppendTowerStatus(string message) {
+        string towerStatusText = GetTowerStatusText();
+        if (string.IsNullOrWhiteSpace(towerStatusText)) {
+            return message;
+        }
+
+        return $"{message} | {towerStatusText}";
+    }
+
+    string GetTowerStatusText() {
+        BuildMenu buildMenu = FindFirstObjectByType<BuildMenu>();
+        if (buildMenu == null) {
+            return null;
+        }
+
+        return $"Towers: {buildMenu.CurrentTowerCount}/{buildMenu.MaxTowerCount}";
+    }
+
+    void FaceCrystalHealthTextToPlayer() {
+        if (crystalHealthText == null) return;
+
+        Transform targetView = orientation != null ? orientation.transform : Camera.main != null ? Camera.main.transform : null;
+        if (targetView == null) return;
+
+        Vector3 lookDirection = crystalHealthText.transform.position - targetView.position;
+        if (lookDirection.sqrMagnitude <= 0.0001f) return;
+
+        crystalHealthText.transform.rotation = Quaternion.LookRotation(lookDirection, Vector3.up);
     }
 
     void UpdatePhaseLabel(string newLabel) {

@@ -61,6 +61,8 @@ public class Movement : MonoBehaviour
     int speedParameterHash;
     int jumpParameterHash;
     int airParameterHash;
+    float baseWalkSpeed;
+    float baseSprintSpeed;
 
     void Awake()
     {
@@ -90,6 +92,9 @@ public class Movement : MonoBehaviour
         speedParameterHash = Animator.StringToHash(speedParameter);
         jumpParameterHash = Animator.StringToHash(jumpParameter);
         airParameterHash = Animator.StringToHash(airParameter);
+        baseWalkSpeed = Mathf.Max(0f, walkSpeed);
+        baseSprintSpeed = Mathf.Max(0f, sprintSpeed);
+        ApplyMovementMultiplier(WaveUpgradeManager.MovementSpeedMultiplier);
     }
 
     void Update()
@@ -358,5 +363,12 @@ public class Movement : MonoBehaviour
         float feetToCenter = Mathf.Max(0f, b.extents.y - capsule.radius);
         Vector3 feetSphereCenter = b.center + Vector3.down * feetToCenter;
         Gizmos.DrawWireSphere(feetSphereCenter + Vector3.down * Mathf.Max(0.01f, groundCheckDistance * 0.5f), Mathf.Max(0.01f, capsule.radius * 0.9f));
+    }
+
+    public void ApplyMovementMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0f, multiplier);
+        walkSpeed = baseWalkSpeed * multiplier;
+        sprintSpeed = baseSprintSpeed * multiplier;
     }
 }

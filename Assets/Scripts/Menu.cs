@@ -95,6 +95,7 @@ public class Menu : MonoBehaviour
 
         if (loadGameScene)
         {
+            WaveUpgradeManager.ResetRunState();
             if (transitionRunner != null)
                 transitionRunner.LoadSceneWithFade();
         }

@@ -22,10 +22,17 @@ public class BubbleMortarTower : MonoBehaviour
     private float nextShotTime;
     private Animator animator;
     private bool isPlaced;
+    private float baseDamage;
+    private float baseFireRate;
 
     private void Start()
     {
         // Cache the turret animator if available.
+        baseDamage = Mathf.Max(0f, damage);
+        baseFireRate = Mathf.Max(0.01f, fireRate);
+        ApplyDamageMultiplier(WaveUpgradeManager.TowerDamageMultiplier);
+        ApplyFireRateMultiplier(WaveUpgradeManager.TowerFireRateMultiplier);
+
         if (turretHead != null)
         {
             animator = turretHead.GetComponent<Animator>();
@@ -94,6 +101,18 @@ public class BubbleMortarTower : MonoBehaviour
         // Mark the tower as placed and active. This switches the tower into its
         // runtime behaviour so `Update` will search for targets and fire.
         isPlaced = true;
+    }
+
+    public void ApplyDamageMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0f, multiplier);
+        damage = baseDamage * multiplier;
+    }
+
+    public void ApplyFireRateMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0.01f, multiplier);
+        fireRate = baseFireRate * multiplier;
     }
 
     private void OnDrawGizmosSelected()

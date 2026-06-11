@@ -17,6 +17,7 @@ public class BarricadeDefenseTower : MonoBehaviour
     [SerializeField] private float maxHealth = 300f;
     [SerializeField] private float currentHealth;
     [SerializeField] private bool destroyOnDeath = true;
+    private float baseMaxHealth;
 
     [Header("Aggro")]
     [SerializeField] private float aggroRadius = 7f;
@@ -32,8 +33,10 @@ public class BarricadeDefenseTower : MonoBehaviour
     private void Awake()
     {
         // Initialize barricade health and notify listeners.
+        baseMaxHealth = Mathf.Max(1f, maxHealth);
         currentHealth = Mathf.Clamp(currentHealth <= 0f ? maxHealth : currentHealth, 0f, maxHealth);
         onHealthChanged?.Invoke(currentHealth / maxHealth);
+        ApplyHealthMultiplier(WaveUpgradeManager.BarricadeHealthMultiplier);
     }
 
     private void OnEnable()
@@ -104,6 +107,15 @@ public class BarricadeDefenseTower : MonoBehaviour
         }
 
         return closestBarricade;
+    }
+
+    public void ApplyHealthMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0f, multiplier);
+        float healthRatio = maxHealth > 0f ? currentHealth / maxHealth : 1f;
+        maxHealth = baseMaxHealth * multiplier;
+        currentHealth = Mathf.Clamp(healthRatio * maxHealth, 0f, maxHealth);
+        onHealthChanged?.Invoke(currentHealth / maxHealth);
     }
 
     private void OnDrawGizmosSelected()

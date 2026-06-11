@@ -91,8 +91,9 @@ public class BubbleMortarProjectile : MonoBehaviour
                 continue;
             }
 
-            enemy.TakeDamage(damage);
-            SpawnDamagePopup(enemy.transform.position, damage);
+            float finalDamage = WaveUpgradeManager.ApplyCriticalHit(damage, out _);
+            enemy.TakeDamage(finalDamage);
+            SpawnDamagePopup(enemy.transform.position, finalDamage);
         }
 
         Destroy(gameObject);

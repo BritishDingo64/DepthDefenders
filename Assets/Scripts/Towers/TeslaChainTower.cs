@@ -20,6 +20,16 @@ public class TeslaChainTower : MonoBehaviour
     [SerializeField] private Vector3 damagePopupOffset = new Vector3(0f, 1.5f, 0f);
 
     private float nextAttackTime;
+    private float baseDamage;
+    private float baseFireRate;
+
+    private void Awake()
+    {
+        baseDamage = Mathf.Max(0f, damage);
+        baseFireRate = Mathf.Max(0.01f, fireRate);
+        ApplyDamageMultiplier(WaveUpgradeManager.TowerDamageMultiplier);
+        ApplyFireRateMultiplier(WaveUpgradeManager.TowerFireRateMultiplier);
+    }
 
     private void Update()
     {
@@ -56,8 +66,9 @@ public class TeslaChainTower : MonoBehaviour
         {
             if (!chainedTargets.Contains(currentTarget) && !currentTarget.IsDead)
             {
-                currentTarget.TakeDamage(damage);
-                SpawnDamagePopup(currentTarget.transform.position, damage);
+                float finalDamage = WaveUpgradeManager.ApplyCriticalHit(damage, out _);
+                currentTarget.TakeDamage(finalDamage);
+                SpawnDamagePopup(currentTarget.transform.position, finalDamage);
                 chainedTargets.Add(currentTarget);
                 
                 // Spawn zap effect
@@ -163,5 +174,17 @@ public class TeslaChainTower : MonoBehaviour
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, range);
+    }
+
+    public void ApplyDamageMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0f, multiplier);
+        damage = baseDamage * multiplier;
+    }
+
+    public void ApplyFireRateMultiplier(float multiplier)
+    {
+        multiplier = Mathf.Max(0.01f, multiplier);
+        fireRate = baseFireRate * multiplier;
     }
 }

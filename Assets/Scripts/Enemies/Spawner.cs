@@ -20,7 +20,7 @@ public class Spawner : MonoBehaviour {
     [Header("Spawn Ramp")]
     [Tooltip("Skeletons added per wave for each spawner until the max enemy count is reached.")]
     [SerializeField, Min(1)]
-    int skeletonsPerWavePerSpawner = 2;
+    int skeletonsPerWavePerSpawner = 4;
 
     [Tooltip("Maximum enemies each spawner can create in a single wave.")]
     [SerializeField, Min(1)]
@@ -36,7 +36,7 @@ public class Spawner : MonoBehaviour {
 
     [Tooltip("Damage multiplier applied to knights each wave once the wave is 100% knights.")]
     [SerializeField, Min(1f)]
-    float fullKnightDamageMultiplierPerWave = 1.1f;
+    float fullKnightDamageMultiplierPerWave = 1.15f;
 
     [SerializeField]
     float timeBetweenSpawns = 0.35f;

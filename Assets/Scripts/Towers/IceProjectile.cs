@@ -63,9 +63,10 @@ public class IceProjectile : MonoBehaviour
         // Apply damage and slow to the target when the projectile reaches it.
         if (target != null && !target.IsDead)
         {
-            target.TakeDamage(damage);
+            float finalDamage = WaveUpgradeManager.ApplyCriticalHit(damage, out _);
+            target.TakeDamage(finalDamage);
 
-            SpawnDamagePopup(target.transform.position, damage);
+            SpawnDamagePopup(target.transform.position, finalDamage);
 
             Monster monster = target.GetComponent<Monster>();
             if (monster != null)
